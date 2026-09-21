@@ -1,0 +1,7 @@
+# núcleo
+lxml                 # s1 lectura + s7 cirugía del ReqIF (preservando estructura)
+google-genai         # (SDK opcional; clients/gemini.py usa REST puro con urllib)
+docling              # s2 supplier docs feos (escaneados/Word) — pendiente de enchufar
+PyMuPDF              # s2 PDFs digitales: extracción rápida con anclaje por página
+rank-bm25            # s3 retrieval léxico (corpus > CORPUS_MAX_CHARS)
+rapidfuzz            # s6 guard: fuzzy match quote ↔ chunk citado + página exacta

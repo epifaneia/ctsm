@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CTSM · el pipeline</title>
+<style>
+:root{--bg:#f7f8fa;--panel:#fff;--tinta:#151a21;--suave:#59636f;--linea:#e3e7ed;
+ --ok:#1c7a4a;--ok-bg:#e9f6ef;--mal:#a3341d;--mal-bg:#fbeceb;--acc:#2a4a7f;--acc-bg:#eef3fb}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+ --bg:#0f1216;--panel:#171c22;--tinta:#e9edf2;--suave:#98a3af;--linea:#272d36;
+ --ok:#5fd39b;--ok-bg:#122a20;--mal:#f08c76;--mal-bg:#2a1714;--acc:#8fb0e6;--acc-bg:#161d2b}}
+:root[data-theme="dark"]{--bg:#0f1216;--panel:#171c22;--tinta:#e9edf2;--suave:#98a3af;--linea:#272d36;
+ --ok:#5fd39b;--ok-bg:#122a20;--mal:#f08c76;--mal-bg:#2a1714;--acc:#8fb0e6;--acc-bg:#161d2b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tinta);
+ font:16.5px/1.68 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+.wrap{max-width:780px;margin:0 auto;padding:44px 24px 90px}
+h1{font-size:1.9rem;line-height:1.2;margin:0 0 8px;letter-spacing:-.015em}
+h2{font-size:1.3rem;margin:44px 0 6px;letter-spacing:-.01em}
+h2 .num{display:block;font-size:.71rem;text-transform:uppercase;letter-spacing:.1em;
+ color:var(--acc);font-weight:700;margin-bottom:4px}
+h3{font-size:1rem;margin:24px 0 7px}
+h3 code{font-size:.95em}
+p{margin:0 0 14px}
+ul{margin:0 0 14px;padding-left:22px}
+li{margin-bottom:7px}
+.lede{font-size:1.04rem;color:var(--suave);margin:0 0 24px}
+.nda{background:var(--mal-bg);border-left:3px solid var(--mal);padding:10px 14px;
+ border-radius:0 6px 6px 0;margin:20px 0;font-size:.89rem}
+pre{background:var(--panel);border:1px solid var(--linea);border-radius:10px;padding:16px 18px;
+ overflow-x:auto;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.82rem;
+ line-height:1.6;margin:20px 0}
+code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.87em;
+ background:var(--acc-bg);color:var(--acc);padding:1px 6px;border-radius:4px}
+pre code{background:none;color:inherit;padding:0}
+.clave{border-left:3px solid var(--acc);background:var(--acc-bg);padding:13px 17px;
+ border-radius:0 8px 8px 0;margin:18px 0}
+.clave p:last-child{margin-bottom:0}
+footer{margin-top:52px;padding-top:16px;border-top:1px solid var(--linea);color:var(--suave);font-size:.85rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>El pipeline de CTSM</h1>
+<p class="lede">Cómo se audita un ReqIF de requisitos de cliente contra la documentación del proveedor</p>
+
+<div class="nda"><b>Documento interno.</b> Describe el funcionamiento del sistema sobre
+documentación sujeta a NDA.</div>
+
+<p>El sistema toma un documento de requisitos exportado de Polarion en formato ReqIF, lo
+contrasta contra los manuales del proveedor en PDF, y <b>devuelve el mismo ReqIF</b> con tres
+campos rellenos por requisito: el veredicto, el razonamiento con sus citas ancladas a página y
+sección, y un mensaje para el proveedor. El fichero resultante se reimporta en Polarion.</p>
+
+<p>Todo se ejecuta <b>en local y sin conexión</b>: ni los requisitos ni los manuales salen del
+equipo.</p>
+
+<pre><code>ReqIF de Polarion                        Manuales del proveedor (PDF)
+      │                                            │
+   s0_prepare_stk                           s2_supplier_corpus
+      │  crea los campos de destino               │  PDF → fragmentos con
+   s1_parse_stk                                   │  página y sección reales
+      │  ReqIF → JSON                             │
+      └──────────────────┬────────────────────────┘
+                         │
+                   s3_retrieve      10 fragmentos candidatos por requisito
+                         │
+                   s4_evaluate      ← único paso que usa modelo
+                         │
+                   s6_verify        verificación de citas → results.json
+                         │           ─────── LA FRONTERA ───────
+                   s7_inject        cirugía sobre el ReqIF original
+                         │
+                 ReqIF + ReqIFZ listos para reimportar</code></pre>
+
+<div class="clave">
+<p><b>De siete pasos, uno solo usa modelo.</b> Los otros seis son código determinista, repetible
+y auditable.</p>
+</div>
+
+<h2><span class="num">Paso 1</span>Obtención y curación del dato</h2>
+
+<h3><code>s0_prepare_stk</code> · crear los campos de destino</h3>
+<p>Si el ReqIF exportado no declara los tres campos donde va el resultado —<code>OEM Status</code>,
+<code>Rationale</code> y <code>Comments from/to External</code>— este paso los crea: el tipo de
+dato de la enumeración con sus valores y las tres definiciones de atributo. No escribe valores ni
+toca los objetos, la jerarquía o los identificadores existentes. Su salida pasa a ser el original
+sobre el que trabajará <code>s7</code>.</p>
+
+<h3><code>s1_parse_stk</code> · ReqIF → JSON</h3>
+<p>Parser determinista. Extrae requisitos, jerarquía, identificadores y los valores reales de la
+enumeración de estado del propio documento: la taxonomía la dicta el ReqIF de entrada, no el
+código. Marca además qué objetos son evaluables, descartando portadas y encabezados.</p>
+
+<h3><code>s2_supplier_corpus</code> · PDF → corpus</h3>
+<p>Extrae el texto de los manuales y lo trocea en fragmentos que conservan <b>página y sección
+reales</b>, más un mapa que permitirá después derivar la página exacta de cada cita. El corte
+respeta los límites de sección y de frase. Los PDF cifrados se descifran en memoria; nunca se
+escribe una copia en claro.</p>
+
+<div class="clave">
+<p><b>Aquí no hizo falta nada más.</b> Los manuales del proveedor son PDF nativos con capa de
+texto, y todo el contenido normativo vive en prosa: las tablas van precedidas de su explicación y
+las figuras se describen en el texto corrido. No fue necesario reconocimiento óptico, ni
+extracción estructurada de tablas, ni interpretación de imágenes.</p>
+<p>Es un paso que puede incorporarse más adelante si llegan documentos escaneados, o manuales
+donde el contenido viva dentro de las tablas en lugar de en el texto.</p>
+</div>
+
+<h2><span class="num">Paso 2</span>Contexto</h2>
+<h3><code>s3_retrieve</code> · los candidatos de cada requisito</h3>
+<p>Por cada requisito recupera los <b>10 fragmentos más afines</b> del corpus mediante búsqueda
+léxica, y guarda esa lista como los <b>únicos fragmentos que el modelo podrá citar</b>.</p>
+<p>Búsqueda léxica y no vectorial porque el vocabulario de estos manuales son identificadores
+exactos —registros, direcciones de memoria, nombres de bit—, donde la coincidencia literal gana y
+además es auditable: se puede explicar por qué salió cada fragmento.</p>
+
+<h2><span class="num">Paso 3</span>Guardarraíl de entrada</h2>
+<p>Comprobaciones de código, sin modelo, que evitan invocarlo en balde o con material defectuoso:</p>
+<ul>
+<li>Solo llegan al motor los objetos marcados como evaluables.</li>
+<li>Se estima el tamaño del prompt y se aborta si excede la ventana del modelo, porque el
+servidor de inferencia recorta lo que no cabe <b>sin avisar</b>: el modelo respondería con
+seguridad sobre documentación que nunca vio.</li>
+<li>Se verifica después el contador real de tokens, por si la estimación se quedó corta.</li>
+</ul>
+
+<h2><span class="num">Paso 4</span>Motor cognitivo</h2>
+<h3><code>s4_evaluate</code> · el veredicto</h3>
+<p>Una llamada por requisito, con <b>Qwen 2.5 14B servido en local</b>. Recibe el requisito y sus
+diez fragmentos candidatos, y devuelve veredicto, razonamiento, citas y mensaje al proveedor bajo
+un esquema de respuesta impuesto en la propia llamada.</p>
+
+<h4>Lo que el modelo no puede escribir</h4>
+<p>La técnica central del sistema: <b>si no puede escribir un dato, no puede inventárselo.</b></p>
+<ul>
+<li><b>El identificador del fragmento</b> no lo escribe: lo elige de la lista cerrada de sus diez
+candidatos, impuesta por el esquema. Citar una ubicación no dada es imposible, no improbable.</li>
+<li><b>La página y la sección</b> las deriva el código del anclaje del fragmento.</li>
+<li><b>El estado</b> se elige de la enumeración real del ReqIF; nunca es texto libre.</li>
+</ul>
+<p>El paso guarda su progreso y reanuda por donde iba: una corrida de horas no puede perderse
+entera por un corte.</p>
+
+<h2><span class="num">Paso 5</span>Guardarraíl de salida</h2>
+
+<h3><code>s6_verify</code> · verificar y sellar</h3>
+<p>Comprueba sin modelo todo lo que devolvió el paso anterior:</p>
+<ul>
+<li><b>Cada cita se busca literalmente</b> en el fragmento que el modelo dijo estar citando, tras
+normalizar el ruido tipográfico del PDF y sin umbral de similitud: o el texto está, o no está. Si
+no aparece, la cita se descarta.</li>
+<li><b>La página exacta</b> se deriva de la posición del hallazgo. La cita final la compone el
+código, nunca el modelo.</li>
+<li><b>El estado</b> se contrasta contra la enumeración real del ReqIF.</li>
+</ul>
+<div class="clave">
+<p><b><code>results.json</code> es la frontera.</b> Separa el análisis de la escritura y actúa de
+contrato entre ambos: permite rehacer toda la parte cognitiva sin repetir la cirugía sobre el
+ReqIF, y al revés.</p>
+</div>
+
+<h3><code>s7_inject</code> · devolver el ReqIF</h3>
+<p>El paso más crítico. El entregable no es un JSON: es el fichero que Polarion tiene que
+aceptar, y reconstruirlo mal produce requisitos duplicados o un import que falla.</p>
+<p>Por eso el ReqIF <b>nunca se regenera</b>. Se abre el original con un parser que preserva la
+estructura, se editan los valores de los tres campos autorizados, y no se toca nada más.
+Después, tres candados:</p>
+<ul>
+<li><b>Mismo conjunto exacto de identificadores.</b> Polarion empareja por ellos: si cambian, el
+import duplica en vez de actualizar.</li>
+<li><b>Comparación literal de todo lo demás.</b> Cabecera, tipos, jerarquía y orden, idénticos al
+original.</li>
+<li><b>Reglas sobre lo escrito.</b> Un solo elemento raíz en cada campo de texto enriquecido, y
+toda referencia a un valor de enumeración debe existir ya en el fichero.</li>
+</ul>
+<p>Se añade una comprobación de integridad referencial del fichero completo: identificadores
+únicos y toda referencia resolviendo a un elemento del tipo correcto.</p>
+<p>La salida son el <code>.reqif</code> y el <code>.reqifz</code> listos para reimportar,
+verificado sobre un proyecto real de Polarion.</p>
+
+<footer>Documento interno · pipeline CTSM.</footer>
+
+</div>
+</body>
+</html>
