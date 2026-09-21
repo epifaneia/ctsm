@@ -1,0 +1,81 @@
+{
+  "metadata": {
+    "document_name": "STM32F10xxx Validation Requirements",
+    "total_requisitos": 9,
+    "method": "Manual Test Set (NotebookLM sobre RM0008 público)",
+    "nota": "coverage = ground truth esperado (YES→Compliant, NO→Not compliant, TBD→Unconfirmed). NUNCA se pasa al motor: solo para puntuar."
+  },
+  "headers": [
+    {
+      "anchor": "H1",
+      "title": "Hardware Specifications & Validation",
+      "number": "1",
+      "level": 1
+    }
+  ],
+  "requisitos": [
+    {
+      "req_id": "REQ-STM-ACC-001",
+      "texto": "The microcontroller shall operate with a primary voltage supply (VDD) ranging from 2.0 V to 3.6 V.",
+      "parent_header": "H1",
+      "source": "RM0008",
+      "coverage": "YES"
+    },
+    {
+      "req_id": "REQ-STM-ACC-002",
+      "texto": "The system shall include a CRC calculation unit to compute a software signature during runtime using a 32-bit data word.",
+      "parent_header": "H1",
+      "source": "RM0008",
+      "coverage": "YES"
+    },
+    {
+      "req_id": "REQ-STM-ACC-003",
+      "texto": "Connectivity line devices shall support Ethernet MAC communication at both 10 Mbit/s and 100 Mbit/s operating rates.",
+      "parent_header": "H1",
+      "source": "RM0008",
+      "coverage": "YES"
+    },
+    {
+      "req_id": "REQ-STM-REJ-004",
+      "texto": "The USB On-The-Go (OTG) interface shall support High-Speed (480 Mbit/s) data transfers when operating in device mode.",
+      "parent_header": "H1",
+      "source": "RM0008",
+      "coverage": "NO"
+    },
+    {
+      "req_id": "REQ-STM-REJ-005",
+      "texto": "The backup domain shall provide at least 256 bytes of backup registers for storing user application data.",
+      "parent_header": "H1",
+      "source": "RM0008",
+      "coverage": "NO"
+    },
+    {
+      "req_id": "REQ-STM-REJ-006",
+      "texto": "The I2S audio protocol interface shall be available and supported across all low-density and medium-density devices.",
+      "parent_header": "H1",
+      "source": "RM0008",
+      "coverage": "NO"
+    },
+    {
+      "req_id": "REQ-STM-OPN-007",
+      "texto": "The external high-speed clock (HSE) circuit shall be driven by a precisely tuned 12.000 MHz quartz crystal oscillator.",
+      "parent_header": "H1",
+      "source": "RM0008",
+      "coverage": "TBD"
+    },
+    {
+      "req_id": "REQ-STM-OPN-008",
+      "texto": "The backup domain (VBAT) shall be powered exclusively by a primary Lithium-ion coin cell battery.",
+      "parent_header": "H1",
+      "source": "RM0008",
+      "coverage": "TBD"
+    },
+    {
+      "req_id": "REQ-STM-OPN-009",
+      "texto": "The application software shall guarantee a maximum interrupt response and processing time of 5 milliseconds for incoming CAN messages.",
+      "parent_header": "H1",
+      "source": "RM0008",
+      "coverage": "TBD"
+    }
+  ]
+}

@@ -1,0 +1,718 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Arquitectura de pipelines cognitivos · glosario y estrategias</title>
+<style>
+:root{--bg:#f7f8fa;--panel:#fff;--tinta:#151a21;--suave:#59636f;--linea:#e3e7ed;
+ --ok:#1c7a4a;--ok-bg:#e9f6ef;--al:#8a6100;--al-bg:#fdf3e0;--mal:#a3341d;--mal-bg:#fbeceb;
+ --acc:#2a4a7f;--acc-bg:#eef3fb}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+ --bg:#0f1216;--panel:#171c22;--tinta:#e9edf2;--suave:#98a3af;--linea:#272d36;
+ --ok:#5fd39b;--ok-bg:#122a20;--al:#e3ba60;--al-bg:#2a2214;--mal:#f08c76;--mal-bg:#2a1714;
+ --acc:#8fb0e6;--acc-bg:#161d2b}}
+:root[data-theme="dark"]{--bg:#0f1216;--panel:#171c22;--tinta:#e9edf2;--suave:#98a3af;--linea:#272d36;
+ --ok:#5fd39b;--ok-bg:#122a20;--al:#e3ba60;--al-bg:#2a2214;--mal:#f08c76;--mal-bg:#2a1714;
+ --acc:#8fb0e6;--acc-bg:#161d2b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tinta);
+ font:16.5px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+.wrap{max-width:860px;margin:0 auto;padding:44px 24px 100px}
+h1{font-size:2rem;line-height:1.2;margin:0 0 8px;letter-spacing:-.015em}
+h2{font-size:1.4rem;margin:56px 0 6px;letter-spacing:-.01em}
+h2 .num{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;
+ color:var(--acc);font-weight:700;margin-bottom:5px}
+h3{font-size:1.08rem;margin:32px 0 10px;padding-bottom:7px;border-bottom:1px solid var(--linea)}
+h4{font-size:.98rem;margin:22px 0 6px}
+p{margin:0 0 15px}
+ul,ol{margin:0 0 15px;padding-left:22px}
+li{margin-bottom:8px}
+.lede{font-size:1.05rem;color:var(--suave);margin:0 0 24px}
+.carta{background:var(--panel);border:1px solid var(--linea);border-radius:12px;padding:20px 24px;margin:24px 0 34px}
+.carta p:last-child{margin-bottom:0}
+.premisa{border-left:3px solid var(--acc);background:var(--acc-bg);padding:14px 18px;
+ border-radius:0 8px 8px 0;margin:18px 0}
+.premisa p:last-child{margin-bottom:0}
+.aviso{border-left:3px solid var(--mal);background:var(--mal-bg);padding:14px 18px;
+ border-radius:0 8px 8px 0;margin:18px 0}
+.aviso p:last-child{margin-bottom:0}
+.nota{border-left:3px solid var(--al);background:var(--al-bg);padding:14px 18px;
+ border-radius:0 8px 8px 0;margin:18px 0}
+.nota p:last-child{margin-bottom:0}
+nav{background:var(--panel);border:1px solid var(--linea);border-radius:12px;padding:20px 24px;margin:26px 0 40px}
+nav b{display:block;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--suave);margin-bottom:12px}
+nav ol{margin:0;padding-left:20px;columns:2;column-gap:34px}
+nav li{margin-bottom:6px;break-inside:avoid}
+nav a{color:var(--acc);text-decoration:none}
+nav a:hover{text-decoration:underline}
+.tablewrap{overflow-x:auto;border:1px solid var(--linea);border-radius:10px;background:var(--panel);margin:20px 0}
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+th,td{padding:10px 13px;text-align:left;border-bottom:1px solid var(--linea);vertical-align:top}
+th{background:var(--bg);font-size:.74rem;text-transform:uppercase;letter-spacing:.05em;color:var(--suave);white-space:nowrap}
+tr:last-child td{border-bottom:none}
+td.lvl{font-weight:700;color:var(--acc);text-align:center;width:52px}
+dl{margin:0 0 18px}
+dt{font-weight:700;margin-top:18px}
+dd{margin:3px 0 0;color:var(--suave)}
+dd em{color:var(--tinta);font-style:normal}
+.oro{background:var(--panel);border:1px solid var(--linea);border-radius:10px;padding:16px 20px;margin:14px 0}
+.oro b{color:var(--ok)}
+.oro p{margin:0}
+code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.87em;
+ background:var(--acc-bg);color:var(--acc);padding:1px 6px;border-radius:4px}
+footer{margin-top:64px;padding-top:18px;border-top:1px solid var(--linea);color:var(--suave);font-size:.86rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Arquitectura de pipelines cognitivos</h1>
+<p class="lede">Glosario de términos, estrategias por paso y dificultades habituales</p>
+
+<div class="carta">
+<p>Me dijiste que querías entender bien lo que estamos haciendo, para convertirte en un
+interlocutor válido. Valoro muchísimo el interés y todo el trabajo que estás haciendo para que
+este proyecto dé frutos.</p>
+<p>Me he tomado la libertad de preparar un curso rapidísimo —para leer en el avión— basado en el
+esquema que aparece en las diapositivas: un glosario de términos, las estrategias que se suelen
+usar en cada paso, y las dificultades que se pueden encontrar por el camino.</p>
+</div>
+
+<nav>
+<b>Contenido</b>
+<ol>
+<li><a href="#p1">Obtención y curación del dato</a></li>
+<li><a href="#p2">Contexto</a></li>
+<li><a href="#p3">Guardarraíl de entrada</a></li>
+<li><a href="#p4">Motor cognitivo</a></li>
+<li><a href="#p5">Guardarraíl de salida</a></li>
+<li><a href="#gob">Pilar normativo y gobernanza</a></li>
+</ol>
+</nav>
+
+<!-- ══════════════ PASO 1 ══════════════ -->
+<h2 id="p1"><span class="num">Paso 1</span>Obtención y curación del dato</h2>
+<p>Extraer la información de su origen y transformarla en una estructura estandarizada y limpia
+que el resto del pipeline pueda consumir sin fricción ni ambigüedad.</p>
+<div class="premisa">
+<p><b>La estructura es precisión gratis.</b> Cuando el dato ya cuenta con estructura, jamás se
+sustituye por la inferencia estocástica de un modelo de lenguaje.</p>
+</div>
+
+<h3>1 · Glosario de términos clave</h3>
+<dl>
+<dt>Ingesta estructural / Parser determinista</dt>
+<dd>Uso de código tradicional (parsers de XML, JSON, ReqIF, CSV o conectores de API) para
+procesar archivos estructurados. Garantiza una tasa de error de cero a un coste computacional
+despreciable, eliminando la necesidad de usar un modelo de lenguaje para tareas de formateo.</dd>
+
+<dt>Ruido estructural / Ruido de formato</dt>
+<dd>Información redundante, etiquetas de formateo excesivas, scripts o código de maquetación
+propio de las herramientas de origen que ensucian los archivos fuente. Satura innecesariamente
+la ventana de contexto y debe eliminarse con código tradicional antes de enviar nada al modelo.</dd>
+
+<dt>Chunking (troceado del dato)</dt>
+<dd>División de un documento extenso en fragmentos manejables. Una mala estrategia de troceado
+arruina la precisión de los pasos de contexto y razonamiento posteriores.</dd>
+
+<dt>Trazabilidad / Anclaje de origen</dt>
+<dd>Preservación de metadatos —IDs de requisitos, números de página, secciones, versión del
+documento— vinculados indisolublemente a cada fragmento desde el segundo cero. El texto de
+ingeniería jamás viaja solo por el pipeline: requiere su anclaje para permitir auditorías
+posteriores.</dd>
+
+<dt>Pérdida silenciosa de información</dt>
+<dd>Degradación introducida por la propia ingesta que no produce ningún error visible: una frase
+partida entre dos fragmentos, una tabla desalineada, un valor separado de su magnitud. El
+pipeline continúa sin avisar y el fallo emerge mucho más abajo, disfrazado de error de
+razonamiento del modelo.</dd>
+</dl>
+
+<h3>2 · Jerarquía de fuentes</h3>
+<p>Las vías de ingesta se organizan de menor a mayor coste técnico, económico y fragilidad
+operativa. <b>Regla del equipo:</b> solo se desciende de nivel cuando el superior es técnica o
+físicamente inviable para el caso de uso.</p>
+<div class="tablewrap"><table>
+<tr><th>Nivel</th><th>Origen del dato</th><th>Ruta técnica de extracción</th><th>Coste</th><th>Fragilidad operativa</th></tr>
+<tr><td class="lvl">1</td><td>Sistemas con API</td><td>Conector directo, peticiones REST, GraphQL o integraciones nativas.</td><td>Bajo</td><td>Mínima — determinista, datos tipados en origen.</td></tr>
+<tr><td class="lvl">2</td><td>Archivos estructurados</td><td>Parsers tradicionales de esquemas formales (ReqIF, XML, JSON, CSV).</td><td>Bajo</td><td>Mínima — regido por un esquema rígido que no cambia de opinión.</td></tr>
+<tr><td class="lvl">3</td><td>Documentos ofimáticos</td><td>Extracción mediante librerías de programación (Word, Excel, PowerPoint).</td><td>Bajo–Medio</td><td>Baja — depende de la consistencia de estilos del creador.</td></tr>
+<tr><td class="lvl">4</td><td>PDF nativo (con capa de texto)</td><td>Extracción programática del árbol del documento; texto y tablas mediante librerías especializadas.</td><td>Medio</td><td>Media — tablas rotas, desalineación de columnas, alteración del orden de lectura.</td></tr>
+<tr><td class="lvl">5</td><td>PDF escaneado / papel</td><td>Digitalización mediante OCR avanzado, validación estructural y limpieza del texto crudo.</td><td>Alto</td><td>Alta — caracteres corruptos, desalineaciones, ruido binario.</td></tr>
+<tr><td class="lvl">6</td><td>Conocimiento tácito</td><td>Sesiones de ingeniería de requisitos, entrevistas de elicitación y transcripción experta.</td><td>Crítico</td><td>Muy alta — subjetivo, no formalizado, propenso a sesgos humanos.</td></tr>
+</table></div>
+
+<h3>3 · Estrategias de troceado</h3>
+<h4>Troceado estructural <em>(estrategia preferente)</em></h4>
+<p>El corte sigue la semántica intrínseca del documento: por requisito individual, por sección o
+capítulo normativo, por fila de base de datos, por cláusula técnica. Mantiene intactos el
+contexto lógico, la unidad de significado y los metadatos asociados.</p>
+
+<h4>Troceado por tamaño fijo <em>(segundo recurso)</em></h4>
+<p>División ciega por longitud de caracteres o tokens, con solapamiento artificial entre
+fragmentos adyacentes. Puede cortar fórmulas, tablas o frases clave por la mitad, obligando a
+introducir redundancias que aumentan el coste y disminuyen la precisión.</p>
+
+<h4>Troceado por similitud semántica <em>(último recurso)</em></h4>
+<p>Agrupación dinámica mediante modelos de embeddings según el cambio de tema o la distancia
+vectorial. Introduce no-determinismo, coste de computación adicional y gran dificultad para
+auditar los límites de cada fragmento.</p>
+
+<div class="aviso">
+<p><b>La dificultad más traicionera de este paso.</b> Un troceado por tamaño puede cortar una
+frase justo antes del dato: el fragmento termina en <em>«puede tener una frecuencia de hasta»</em>
+y el valor queda en el fragmento siguiente. El modelo recibe la premisa sin la cifra y emite un
+veredicto equivocado — y el fallo <b>aparenta ser un error de razonamiento</b>, no de ingesta.</p>
+<p>El mismo patrón se da con los detectores de estructura demasiado laxos: una regla que
+identifique un título de sección como «un número seguido de texto en mayúscula» también captura
+frases normales partidas por el salto de línea, cortando el fragmento donde no debe y
+etiquetándolo con secciones que no existen.</p>
+<p><b>Señal de alarma:</b> si varios modelos distintos fallan exactamente en el mismo elemento,
+el problema casi nunca está en los modelos. Está en lo que se les da de comer.</p>
+</div>
+
+<h3>4 · Cómo se comprueba que este paso funciona</h3>
+<p>Todo verificable sin invocar al modelo, con código tradicional y coste cero:</p>
+<ul>
+<li>Porcentaje de fragmentos que terminan en frase completa (los que no, son candidatos a
+pérdida silenciosa).</li>
+<li>Secciones detectadas frente a secciones sospechosas: título excesivamente largo, con punto y
+seguido, o con relleno de índice.</li>
+<li>Unicidad de identificadores de fragmento — dos documentos distintos jamás pueden compartir
+prefijo, o una cita acabará apuntando al documento equivocado.</li>
+<li>Cobertura: caracteres extraídos frente a tamaño del original, para detectar páginas perdidas.</li>
+</ul>
+
+<h3>5 · Reglas de oro del Paso 1</h3>
+<div class="oro"><p><b>No normalizar con modelos lo que puede hacer un parser.</b> Procesar un JSON,
+un XML o un ReqIF con programación clásica asegura tasa de error cero, velocidad instantánea y
+coste de cero tokens.</p></div>
+<div class="oro"><p><b>Preservación de metadatos desde el segundo cero.</b> Todo fragmento
+extraído debe viajar enlazado a su identificador de origen. Es lo que hace el sistema auditable
+y lo que sostiene el pilar normativo de trazabilidad.</p></div>
+<div class="oro"><p><b>El paso gratis es el mejor paso.</b> Si la ingesta entrega los datos
+limpios, estructurados y tipados, el guardarraíl de entrada posterior se resuelve solo y a coste
+cero.</p></div>
+
+<!-- ══════════════ PASO 2 ══════════════ -->
+<h2 id="p2"><span class="num">Paso 2</span>Contexto</h2>
+<p>Poner delante del modelo exactamente la información que necesita para resolver una subtarea
+concreta, y absolutamente nada más.</p>
+<div class="premisa">
+<p><b>La recuperación por similitud semántica es el último recurso, jamás el primero.</b> Es
+lenta, aproximada, introduce ruido y resulta difícil de depurar cuando falla. Si el fragmento
+correcto puede seleccionarse de forma determinista, nunca debe delegarse en un índice vectorial.</p>
+</div>
+
+<h3>1 · Glosario de términos clave</h3>
+<dl>
+<dt>Ventana de contexto</dt>
+<dd>Límite físico de información —medido en tokens— que un modelo puede procesar durante una
+única llamada. Saturarla no solo incrementa latencia y coste: provoca dilución del contexto y
+merma la capacidad del modelo para localizar detalles críticos.</dd>
+
+<dt>RAG (generación aumentada por recuperación)</dt>
+<dd>Patrón de arquitectura que combina búsqueda tradicional con generación cognitiva. En lugar
+de obligar al modelo a «memorizar» el conocimiento en sus pesos, se busca dinámicamente la
+información relevante en una fuente externa y se inyecta en el prompt, para que responda
+basándose estrictamente en evidencias verificables.</dd>
+
+<dt>Dilución de contexto</dt>
+<dd>Degradación de la precisión al saturar la ventana con información excesiva o irrelevante:
+se dispara la latencia, sube el coste y el modelo pierde «la aguja en el pajar».</dd>
+
+<dt>Consulta determinista</dt>
+<dd>Recuperación exacta mediante identificadores únicos, árboles de trazabilidad o metadatos
+indexados. Certidumbre absoluta y sin coste de búsqueda semántica.</dd>
+
+<dt>Búsqueda léxica (BM25)</dt>
+<dd>Recuperación por coincidencia literal de términos técnicos, palabras clave o referencias
+cruzadas. Alta certidumbre, interpretable y auditable. Es la que encuentra un identificador de
+registro o un valor hexadecimal exactos, donde la búsqueda vectorial falla.</dd>
+
+<dt>Recuperación semántica (embeddings)</dt>
+<dd>Búsqueda aproximada por distancia vectorial. Recurso secundario para cuando se desconoce el
+vocabulario exacto o hay sinónimos y perífrasis.</dd>
+
+<dt>Recuperación híbrida</dt>
+<dd>Fusión de la precisión terminológica de la búsqueda léxica con la cobertura conceptual de la
+vectorial, para mitigar falsos positivos. Se combinan, no se sustituyen.</dd>
+
+<dt>Reranking (reordenación en dos fases)</dt>
+<dd>Recuperación inicial amplia y rápida, seguida de un modelo clasificador secundario que
+evalúa el ajuste real y elimina ruido documental antes de alimentar al modelo principal, a
+cambio de un incremento controlado de latencia.</dd>
+
+<dt>Aislamiento de canales</dt>
+<dd>Separación rígida dentro del prompt entre el «contexto de referencia» y el «dato bajo
+prueba», para blindar el sistema ante alteraciones de rol o instrucciones incrustadas.</dd>
+
+<dt>Recall@K</dt>
+<dd>De un conjunto de casos anotados a mano, cuántas veces el fragmento realmente pertinente
+aparece entre los K recuperados. <em>Es la métrica que sostiene todo lo que viene después: si el
+fragmento correcto no se recupera, ningún modelo por bueno que sea podrá razonar sobre él.</em></dd>
+</dl>
+
+<h3>2 · La escalera de recuperación</h3>
+<p>De menor a mayor incertidumbre, coste y complejidad. <b>Regla del equipo:</b> se desciende de
+escalón únicamente cuando el superior es inviable.</p>
+<div class="tablewrap"><table>
+<tr><th>Nivel</th><th>Situación del dato</th><th>Ruta técnica de inyección</th><th>Certidumbre y control</th><th>Coste</th></tr>
+<tr><td class="lvl">1</td><td>Ventana de contexto holgada</td><td>Inyección directa, sin motor de recuperación: el problema completo y sus referencias caben en la llamada.</td><td>Determinista absoluto</td><td>Mínimo</td></tr>
+<tr><td class="lvl">2</td><td>Tramos específicos conocidos</td><td>Consulta determinista por ID, módulo o relaciones de trazabilidad previas.</td><td>Determinista absoluto — garantía de no fallo</td><td>Mínimo</td></tr>
+<tr><td class="lvl">3</td><td>Coincidencias terminológicas exactas</td><td>Búsqueda léxica (BM25) sobre términos técnicos y referencias directas.</td><td>Alta — fácil de depurar y auditar</td><td>Bajo</td></tr>
+<tr><td class="lvl">4</td><td>Vocabulario variable o sinónimos</td><td>Recuperación semántica mediante embeddings.</td><td>Media / aproximada — sujeta a falsos positivos</td><td>Medio</td></tr>
+<tr><td class="lvl">5</td><td>Falsos positivos recurrentes</td><td>Recuperación híbrida: fusión de BM25 y similitud semántica.</td><td>Media–Alta</td><td>Medio–Alto</td></tr>
+<tr><td class="lvl">6</td><td>Ruido documental masivo</td><td>Reranking en dos fases: recuperación amplia y reordenación con modelo secundario.</td><td>Alta — limpieza profunda del contexto</td><td>Máximo</td></tr>
+</table></div>
+
+<h3>3 · Estrategias de inyección y aislamiento</h3>
+<ul>
+<li><b>Aislamiento estricto por subtarea.</b> Se inyecta exclusivamente la unidad mínima de
+trabajo actual: las tres cláusulas que regulan el requisito bajo prueba, no la norma completa.</li>
+<li><b>Inyección de metadatos de trazabilidad.</b> Todo fragmento viaja acompañado de su
+metadato fuente inalterable —ID, sección, versión, norma—, para que el motor cognitivo pueda
+referenciar de dónde extrae cada conclusión.</li>
+<li><b>Separación estricta de canales.</b> El prompt distingue con nitidez qué es la referencia
+y qué es el dato bajo evaluación. No se mezclan orígenes ni instrucciones en un mismo bloque.</li>
+</ul>
+<div class="nota">
+<p><b>Sobre el aislamiento de canales, un matiz de amenaza.</b> En sistemas internos el vector de
+riesgo no suele ser un usuario malicioso, sino <b>la documentación de terceros</b>: manuales,
+especificaciones y anexos que nadie ha auditado y que se inyectan como contexto. El contenido
+recuperado debe tratarse siempre como dato, nunca como instrucción, aunque proceda de un
+proveedor de confianza.</p>
+</div>
+
+<h3>4 · Dónde está realmente el coste</h3>
+<p>Conviene distinguir dos costes que se comportan de forma opuesta:</p>
+<ul>
+<li><b>Coste económico</b>, en APIs de pago: escala con los tokens de entrada. Ampliar el
+contexto se paga.</li>
+<li><b>Coste de latencia</b>: dominado casi por completo por los tokens <em>generados</em>, no
+por los leídos. Procesar el contexto de entrada es órdenes de magnitud más rápido que escribir
+la respuesta, porque el modelo recorre sus pesos una vez por cada token que produce.</li>
+</ul>
+<p>De ahí que en despliegues locales ampliar el contexto sea prácticamente gratis en tiempo,
+mientras que pedir una respuesta más larga se paga cara. <b>El motivo fuerte para acotar el
+contexto no es el gasto: es la dilución.</b></p>
+
+<h3>5 · Reglas de oro del Paso 2</h3>
+<div class="oro"><p><b>La similitud semántica es el último recurso, no el primero.</b> Si puedes
+llegar a la información por una clave, un ID de trazabilidad o una palabra técnica exacta, no
+inyectes a través de recuperación vectorial.</p></div>
+<div class="oro"><p><b>Solo la unidad de trabajo actual.</b> Reducir lo que el modelo tiene sobre
+la mesa abarata, acelera y es la mejor barrera contra el desvío atencional.</p></div>
+<div class="oro"><p><b>Sin ID de origen, el contexto no es válido.</b> En ingeniería regulada, un
+veredicto sin anclaje de evidencia literal carece de valor técnico.</p></div>
+<div class="oro"><p><b>Un recuperador que no se mide no se puede mejorar.</b> Anota a mano un
+conjunto de casos y calcula el recall. Sin ese número, no hay forma de saber si el sistema falla
+por el modelo o porque nunca vio la evidencia.</p></div>
+
+<!-- ══════════════ PASO 3 ══════════════ -->
+<h2 id="p3"><span class="num">Paso 3</span>Guardarraíl de entrada · la economía del error</h2>
+<p>Interceptar, filtrar o rechazar cualquier entrada incorrecta o fuera de alcance mediante
+código determinista <b>antes</b> de que llegue al modelo.</p>
+<div class="premisa">
+<p><b>La economía del error.</b> La validación en código clásico tarda microsegundos y cuesta
+cero tokens; permitir que un error sea procesado por un modelo consume inferencia cara, genera
+latencia y expone al sistema a fallos no reproducibles.</p>
+</div>
+
+<h3>1 · Glosario de términos clave</h3>
+<dl>
+<dt>La economía del error</dt>
+<dd>El coste de capturar un error es asimétrico: detectar una entrada inválida en la capa de
+software tradicional es prácticamente gratis; detectarla después de que la haya procesado el
+motor cognitivo multiplica el coste por varios órdenes de magnitud.</dd>
+
+<dt>Fail-fast (fallo temprano)</dt>
+<dd>El sistema interrumpe la ejecución y devuelve un error estructurado en el instante en que
+detecta una entrada inválida. No se intenta «corregir» o «adivinar» con IA lo que está roto de
+origen.</dd>
+
+<dt>Compuertas de control</dt>
+<dd>Filtros secuenciales y jerárquicos de software tradicional —esquema, alcance, calidad,
+sanitización— por los que debe transitar el dato antes de recibir autorización para invocar al
+motor cognitivo.</dd>
+
+<dt>Bypass estructural (paso gratis)</dt>
+<dd>Omisión automática de las compuertas cuando los datos provienen de un pipeline de ingesta
+previo ya auditado y tipado programáticamente.</dd>
+
+<dt>Sanitización de entrada</dt>
+<dd>Limpieza algorítmica del texto para eliminar caracteres de control corruptos, ruido binario
+o patrones de manipulación de comportamiento.</dd>
+
+<dt>Truncado silencioso</dt>
+<dd>Cuando el motor de inferencia recorta una entrada que excede la ventana <b>sin emitir
+ningún aviso</b>. El modelo responde entonces con total seguridad sobre material que nunca vio, y
+nada en la respuesta delata que faltaba la mitad. <em>Exige comprobación explícita del tamaño
+antes de llamar, y verificación del contador real de tokens después.</em></dd>
+</dl>
+
+<h3>2 · Las cinco compuertas de control</h3>
+<p>El dato fluye de la comprobación más barata a la más cara, y es rechazado ante el primer
+incumplimiento.</p>
+<div class="tablewrap"><table>
+<tr><th>Compuerta</th><th>Foco de control</th><th>Ruta técnica de validación</th><th>Coste</th><th>Acción ante fallo</th></tr>
+<tr><td class="lvl">1</td><td><b>Formato y esquema</b><br>Estructura del archivo</td><td>Validación contra esquemas rígidos (JSON Schema, Pydantic, XSD/ReqIF) en código tradicional.</td><td>Mínimo</td><td>Rechazo inmediato con error técnico.</td></tr>
+<tr><td class="lvl">2</td><td><b>Alcance y dominio</b><br>Pertinencia del problema</td><td>Comprobación léxica o de metadatos para asegurar que la petición está dentro del rango de acción de la herramienta.</td><td>Mínimo</td><td>Rechazo por «fuera de alcance».</td></tr>
+<tr><td class="lvl">3</td><td><b>Calidad e integridad</b><br>Estado del texto</td><td>Detección de bloques corruptos por OCR deficiente, campos obligatorios vacíos o ruido binario.</td><td>Bajo</td><td>Bloqueo y solicitud de nueva ingesta.</td></tr>
+<tr><td class="lvl">4</td><td><b>Sanitización</b><br>Seguridad</td><td>Limpieza de variables, tipado estricto y desinfección de patrones de secuestro de comportamiento.</td><td>Bajo</td><td>Eliminación de lo sospechoso o rechazo de la llamada.</td></tr>
+<tr><td class="lvl">5</td><td><b>Bypass estructural</b><br>Eficiencia</td><td>Si el dato proviene de un flujo de curación previo controlado, el pipeline salta directo al motor cognitivo.</td><td>Cero</td><td>No aplica — validado en origen.</td></tr>
+</table></div>
+
+<div class="nota">
+<p><b>El guardarraíl de entrada no es un escalón: envuelve al contexto.</b> Actúa en dos momentos
+distintos. <b>Antes</b> de construir el contexto, sobre el dato: ¿este elemento procede siquiera?
+Un párrafo introductorio o una referencia bibliográfica no son requisitos verificables y no
+deberían consumir una llamada. Y <b>después</b>, sobre el contexto ya montado: ¿cabe en la
+ventana? ¿hay candidatos suficientes? ¿alguno supera el mínimo de afinidad?</p>
+</div>
+
+<h3>3 · Estrategias de validación determinista</h3>
+<ul>
+<li><b>Backend pre-prompteado.</b> Todas las rúbricas e instrucciones de comportamiento se
+encapsulan en el servidor. El usuario final jamás modifica las directrices cognitivas.</li>
+<li><b>Tipado estricto de entrada.</b> El texto no viaja como cadena libre: se parcela en
+objetos tipados con campos atómicos, para que el software tradicional controle cada variable.</li>
+<li><b>Descarte previo por afinidad.</b> Antes de invocar al modelo, se eliminan sin coste los
+candidatos manifiestamente inútiles. Si de diez candidatos quedan tres dudosos, la parte
+cognitiva se abarata a un tercio y el modelo solo opina donde hace falta opinar.</li>
+</ul>
+
+<h3>4 · Reglas de oro del Paso 3</h3>
+<div class="oro"><p><b>El código tradicional siempre va antes que el modelo.</b> Nunca se usa un
+modelo para comprobar si una fecha tiene el formato correcto o si un campo obligatorio está
+vacío. El software estocástico es un pésimo validador estructural.</p></div>
+<div class="oro"><p><b>Rechazar es un éxito del sistema.</b> Devolver un error claro en
+microsegundos es una victoria frente a procesar basura y entregar una alucinación cara.</p></div>
+<div class="oro"><p><b>Si la curación es formal, el guardarraíl está regalado.</b> Integrar la
+salida determinista del Paso 1 con las reglas de validación hace que el pipeline se autovalide a
+coste cero.</p></div>
+
+<!-- ══════════════ PASO 4 ══════════════ -->
+<h2 id="p4"><span class="num">Paso 4</span>Motor cognitivo · la escalera de razonamiento</h2>
+<p>El núcleo donde ocurre el razonamiento, la interpretación o la transformación de información
+no estructurada.</p>
+<div class="premisa">
+<p><b>El trabajo pesado se queda siempre en la capa determinista.</b> El modelo de lenguaje se
+reserva exclusivamente para tareas pequeñas, acotadas y técnicamente no computables mediante
+código convencional.</p>
+</div>
+
+<h3>1 · Glosario de términos clave</h3>
+<dl>
+<dt>Capa determinista tradicional</dt>
+<dd>Entorno de software clásico regido por algoritmos y código estructurado. Comportamiento
+100 % predecible, repetible y auditable, con coste y latencia despreciables.</dd>
+
+<dt>Inferencia estocástica</dt>
+<dd>Proceso probabilístico por el que un modelo generativo predice secuencialmente el token más
+probable. Al basarse en probabilidad, introduce incertidumbre, riesgo de alucinación y
+variabilidad.</dd>
+
+<dt>Motor cognitivo</dt>
+<dd>Componente de IA encargado de interpretar el significado semántico del texto para resolver
+una subtarea que requiere discernimiento.</dd>
+
+<dt>Sobre-ingeniería cognitiva</dt>
+<dd>Error de diseño consistente en usar mecanismos de razonamiento complejos o agentes autónomos
+para problemas que se resuelven con reglas fijas o modelos más sencillos. Dispara costes,
+latencia y tasa de fallos.</dd>
+
+<dt>Reducción de la dimensionalidad de salida</dt>
+<dd>Forzar al modelo a responder de la forma más acotada posible —un booleano, un valor de una
+lista cerrada, un esquema tipado—. Reducir la libertad de escritura minimiza el margen de
+alucinación.</dd>
+
+<dt>Restricción estructural</dt>
+<dd>Impedir <b>por diseño</b> que el modelo produzca cierto tipo de dato, en vez de pedírselo en
+el prompt y comprobarlo después. <em>Si el modelo no puede escribir un identificador de origen
+—solo elegirlo de una lista cerrada impuesta por el esquema de respuesta— citar una ubicación
+inexistente deja de ser improbable y pasa a ser imposible.</em></dd>
+
+<dt>Determinismo procedural</dt>
+<dd>Predictibilidad que se obtiene cuando la secuencia, el orden y las bifurcaciones del proceso
+están rígidamente programados en código tradicional, limitando el papel de la IA a subtareas
+puntuales.</dd>
+</dl>
+
+<h3>2 · La escalera de niveles cognitivos</h3>
+<p><b>Regla del equipo:</b> se desciende de escalón únicamente cuando el nivel superior ha
+demostrado <em>empíricamente</em> que no resuelve el problema.</p>
+<div class="tablewrap"><table>
+<tr><th>Nivel</th><th>Mecanismo</th><th>Qué hace</th><th>Cuándo utilizarlo</th><th>Coste e incertidumbre</th></tr>
+<tr><td class="lvl">0</td><td><b>Determinista puro</b></td><td>Código tradicional, expresiones regulares, reglas lógicas y tablas de correspondencia.</td><td>Siempre que la salida sea formalizable o derivable con algoritmos clásicos.</td><td>Coste cero · 100 % determinista</td></tr>
+<tr><td class="lvl">1</td><td><b>Clasificación cerrada</b></td><td>El modelo elige una categoría dentro de un conjunto cerrado y tipado.</td><td>Taxonomías estables y etiquetas fijas de negocio.</td><td>Mínimo · muy alto determinismo</td></tr>
+<tr><td class="lvl">2</td><td><b>Extracción estructurada</b></td><td>Localiza información específica y la vuelca en un esquema rígido.</td><td>Cuando el dato existe explícitamente y debe parsearse a campos tipados.</td><td>Bajo · alto determinismo</td></tr>
+<tr><td class="lvl">3</td><td><b>Aguja en un pajar</b></td><td>Localización y extracción textual exacta con cita literal de la evidencia.</td><td>Documentos masivos donde hay que aislar la prueba física sin modificarla.</td><td>Medio · alto determinismo</td></tr>
+<tr><td class="lvl">4</td><td><b>Juicio con rúbrica</b></td><td>Aplica un criterio técnico explícito y restrictivo definido en las directrices.</td><td>Juicio de ingeniería cualitativo bajo reglas parametrizables.</td><td>Medio–Alto · determinismo controlado</td></tr>
+<tr><td class="lvl">5</td><td><b>Cadena fija de llamadas</b></td><td>Secuencia orquestada de llamadas encadenadas, con el orden fijado por código.</td><td>Tareas complejas descomponibles en subfases lineales.</td><td>Alto · determinismo procedural</td></tr>
+<tr><td class="lvl">6</td><td><b>Agente autónomo</b></td><td>El modelo decide en tiempo de ejecución las acciones, herramientas y flujos.</td><td>Último recurso: tareas exploratorias imposibles de predefinir.</td><td>Máximo · alto riesgo y fragilidad</td></tr>
+</table></div>
+
+<div class="nota">
+<p><b>Y un escalón que no es tecnológico: el humano.</b> Donde la revisión experta es obligatoria
+por normativa, el veredicto automático no ahorra ese trabajo — solo añade riesgo. Y un riesgo
+particular: un dictamen plausible con una cita real al lado invita a aceptarlo sin comprobar.
+Un campo vacío no engaña a nadie. <b>El humano no es el recurso para cuando la IA falla: es un
+escalón legítimo del diseño</b>, y a menudo el correcto.</p>
+</div>
+
+<h3>3 · Estrategias de arquitectura cognitiva</h3>
+<ul>
+<li><b>Modularidad y orquestación tradicional.</b> En lugar de prompts kilométricos que exijan
+resolver un problema complejo de una vez, el código descompone la tarea y orquesta llamadas a
+niveles inferiores de la escalera, consolidando la respuesta de forma segura.</li>
+<li><b>Cierre rápido de salidas.</b> Esquemas tipados que no dejan espacio a la divagación. El
+lenguaje natural se restringe a las variables estrictamente justificadas, como la justificación
+de una decisión.</li>
+<li><b>Bajar un escalón vale más que afinar el de arriba.</b> Antes de mejorar un prompt, conviene
+preguntarse si esa subtarea la puede hacer el código. Una regla de negocio programada se cumple
+siempre; escrita en el prompt es una recomendación que el modelo puede olvidar.</li>
+</ul>
+
+<h3>4 · Reglas de oro del Paso 4</h3>
+<div class="oro"><p><b>No usar un nivel 6 para un problema de nivel 1.</b> La inmensa mayoría de
+los flujos industriales se resuelven combinando código clásico con llamadas acotadas de
+clasificación, extracción o juicio con rúbrica. Los agentes autónomos son innecesariamente
+frágiles.</p></div>
+<div class="oro"><p><b>La IA es solo un motor cognitivo puntual.</b> La estructura organizativa, la
+lógica de negocio, el control de flujo y la seguridad residen en el software determinista. El
+modelo es un componente atómico e intercambiable.</p></div>
+<div class="oro"><p><b>Repetibilidad como estándar industrial.</b> Toda llamada en producción
+fuerza temperatura cero y semilla fija para minimizar la deriva.</p></div>
+
+<div class="aviso">
+<p><b>Precisión necesaria sobre la repetibilidad.</b> Temperatura cero y semilla fija reducen la
+aleatoriedad del muestreo, pero <b>no garantizan determinismo</b>: el orden de las operaciones en
+coma flotante varía con el tamaño del lote y con el hardware, y en servicios cloud cambian
+además la versión del modelo y la infraestructura bajo un mismo nombre comercial.</p>
+<p>Por eso la reproducibilidad exigible en una auditoría <b>no se sostiene sobre los parámetros
+de muestreo, sino sobre el registro inmutable de inferencia</b>: guardar entrada, contexto,
+versión del modelo y salida cruda. Prometer reproducibilidad bit a bit y no poder demostrarla
+ante un auditor cuesta más credibilidad de la que aporta.</p>
+</div>
+
+<!-- ══════════════ PASO 5 ══════════════ -->
+<h2 id="p5"><span class="num">Paso 5</span>Guardarraíl de salida · el contrato con el destino</h2>
+<p>Validar, estructurar, tipar y reconstruir el formato final del dato para que cumpla
+estrictamente las reglas del sistema que lo va a consumir, garantizando trazabilidad y anclaje
+absoluto con la evidencia.</p>
+<div class="premisa">
+<p><b>Este paso lo dicta el consumidor final del dato</b> —sea un ingeniero o un sistema
+automatizado— y la IA nunca escribe directamente en los entornos de producción.</p>
+</div>
+
+<h3>1 · Glosario de términos clave</h3>
+<dl>
+<dt>Contrato técnico (y de negocio)</dt>
+<dd>Conjunto de reglas semánticas, de formato, tipos, jerarquías y restricciones estructurales
+innegociables que debe cumplir un dato para ser aceptado sin errores por el sistema de destino.</dd>
+
+<dt>Guardarraíl de salida</dt>
+<dd>Capa de validación y transformación final que actúa como filtro hermético antes de entregar
+los datos al usuario o reinyectarlos en los sistemas corporativos.</dd>
+
+<dt>Anclaje a la evidencia (grounding)</dt>
+<dd>Asociación de cada conclusión con el fragmento exacto del documento de origen —párrafo
+literal, cláusula, página, ID— que la justifica, impidiendo la propagación de afirmaciones sin
+sustento.</dd>
+
+<dt>Serialización determinista</dt>
+<dd>Conversión de la salida cognitiva en un archivo final estructurado y tipado usando código
+clásico, preservando esquemas, jerarquías e identificadores de origen.</dd>
+
+<dt>Edición quirúrgica</dt>
+<dd>Modificar <b>únicamente</b> los campos autorizados sobre el documento original, dejando
+intacto todo lo demás. Se opone a regenerar el fichero desde una plantilla o desde una
+representación intermedia. <em>Es la única estrategia admisible cuando el destino es el mismo
+sistema del que salió el dato.</em></dd>
+
+<dt>Verificación de roundtrip</dt>
+<dd>Comparación estructural entre el documento original y el entregado, que falla ante cualquier
+diferencia fuera de los campos autorizados. Es el candado que demuestra que la edición fue
+realmente quirúrgica.</dd>
+
+<dt>Autocuración acotada (self-healing)</dt>
+<dd>Si la salida del modelo falla la validación de esquema, el pipeline reintenta un número
+estrictamente limitado de veces enviándole el error de formato. Superado el límite, se detiene y
+escala a revisión humana.</dd>
+
+<dt>Tolerancia cero (destino sistema)</dt>
+<dd>Nivel de rigidez extremo aplicado cuando los datos se inyectan automáticamente en bases de
+datos o herramientas de gestión del ciclo de vida sin supervisión humana inmediata.</dd>
+
+<dt>Fricción positiva</dt>
+<dd>Paso de validación humana obligatoria en la interfaz para confirmar informes o exportaciones
+críticas, asegurando que el ingeniero sea la única autoridad firmante.</dd>
+</dl>
+
+<h3>2 · Rutas de validación según el consumidor</h3>
+<p>La intensidad y las reglas de validación cambian radicalmente según quién consuma el dato.</p>
+<div class="tablewrap"><table>
+<tr><th>Consumidor</th><th>Foco de la estrategia</th><th>Capa de validación aplicada</th><th>Tolerancia al error</th><th>Rigidez estructural</th></tr>
+<tr><td><b>A · Destino humano</b><br>Ingeniero, auditor, experto</td><td>Usabilidad y confianza: veredictos claros, resaltado de diferencias, evidencia legible.</td><td>Validación semántica, verificación de evidencias legibles y justificaciones detalladas.</td><td>Baja — el humano detecta el error, pero se le fatiga la atención.</td><td>Baja — admite formatos flexibles: informes, tablas visuales.</td></tr>
+<tr><td><b>B · Destino sistema</b><br>Base de datos, ALM, ERP</td><td>Integridad de producción: compatibilidad absoluta para no corromper la jerarquía de datos.</td><td>Esquema rígido, tipado estricto, integridad de identificadores y serialización determinista.</td><td><b>Cero</b> — un error de sintaxis puede corromper proyectos completos.</td><td>Máxima — restricciones estructurales inviolables.</td></tr>
+</table></div>
+
+<h3>3 · Estrategias de reconstrucción del dato</h3>
+<p>Tres estrategias secuenciales en la capa de software tradicional:</p>
+<ol>
+<li><b>Validación tipada de la salida cognitiva.</b> La respuesta del modelo se captura y se
+obliga a validar contra un esquema estructurado. La primera línea de defensa no es corregir el
+error, sino hacerlo imposible: <b>si la llamada impone el esquema de respuesta, el modelo no
+puede devolver algo que no valide.</b> La autocuración queda como red para los casos en que el
+motor no admita esa imposición.</li>
+<li><b>Fusión sobre el documento original, no sobre una copia reconstruida.</b> Se abre el
+fichero de origen con un parser que preserva su estructura y se escriben <b>únicamente</b> los
+campos autorizados. No se regenera el documento a partir de la representación intermedia
+extraída en el Paso 1.</li>
+<li><b>Verificación de roundtrip antes de entregar.</b> Diff estructural entre original y salida
+que falla si aparece cualquier diferencia fuera de lo permitido: identificadores nuevos o
+perdidos, cambios de orden, alteraciones de cabecera o de jerarquía.</li>
+</ol>
+
+<div class="aviso">
+<p><b>Por qué no se regenera el fichero.</b> La representación intermedia extraída en el Paso 1
+no contiene el documento: contiene <em>lo que el parser supo extraer de él</em>. Todo lo demás
+—extensiones propias de la herramienta, atributos que el parser no mira, el orden exacto de los
+elementos, los espacios de nombres, las marcas de última modificación de lo que no se ha
+tocado— se pierde en el viaje de ida y no puede reconstruirse en el de vuelta.</p>
+<p>El sistema de destino sí mira todo eso. Escribir un fichero nuevo «equivalente» en lugar de
+devolver el original con unos campos rellenos es la causa clásica de importaciones que duplican
+elementos o fallan con errores de referencia irresolubles. <b>La diferencia no es de matiz:
+condiciona si el entregable se puede reimportar o no.</b></p>
+</div>
+
+<h3>4 · Reglas de oro del Paso 5</h3>
+<div class="oro"><p><b>La IA nunca escribe en producción de forma directa.</b> Ningún texto libre
+procedente de un modelo se inyecta en una base de datos corporativa: todo transita por un filtro
+de serialización determinista controlado por código.</p></div>
+<div class="oro"><p><b>Una conclusión sin referencia es una alucinación potencial.</b> Un
+veredicto de conformidad carece de validez técnica si no incluye el puntero exacto a la evidencia
+que lo sustenta.</p></div>
+<div class="oro"><p><b>El original es intocable.</b> Cuando el destino es el sistema de origen, se
+edita quirúrgicamente y se verifica el roundtrip. Nunca se regenera desde plantilla.</p></div>
+<div class="oro"><p><b>Reintentos estrictamente limitados.</b> Ante un fallo de estructura, la
+autocuración se limita a un intento controlado. Si vuelve a fallar, el pipeline se detiene para
+revisión experta, impidiendo la propagación del error y el consumo descontrolado de inferencia.</p></div>
+<div class="oro"><p><b>La prueba definitiva no la da ningún test.</b> Antes de dar por bueno el
+contrato, hay que ejecutar una importación real en el sistema de destino con un documento
+desechable.</p></div>
+
+<!-- ══════════════ GOBERNANZA ══════════════ -->
+<h2 id="gob"><span class="num">Capítulo</span>Pilar normativo, gobernanza y seguridad</h2>
+<p>Marco obligatorio de control, ética y protección de la información bajo el que operan todos
+los desarrollos de inteligencia artificial de la organización.</p>
+<div class="premisa">
+<p><b>La IA actúa estrictamente como asistente cognitivo y acelerador de subtareas; nunca posee
+autoridad legal ni capacidad de firma independiente.</b></p>
+</div>
+
+<h3>Subcapítulo 1 · Trazabilidad e integridad de la inferencia</h3>
+<p>Mecanismos técnicos para registrar, auditar y controlar el comportamiento del motor
+cognitivo, garantizando que cada veredicto sea almacenable, reproducible y supervisado por un
+experto humano.</p>
+
+<h4>Conceptos fundamentales</h4>
+<dl>
+<dt>Registro inmutable de inferencia (audit trail)</dt>
+<dd>Almacenamiento persistente e inalterable de todos los parámetros de entrada, contexto y
+salida de cada llamada al motor cognitivo, para asegurar su auditabilidad histórica.</dd>
+<dt>Deriva del modelo (model drift)</dt>
+<dd>Degradación progresiva de la precisión o consistencia de un modelo a lo largo del tiempo,
+provocada por cambios en la distribución de los datos de entrada o por actualizaciones
+silenciosas de los pesos del proveedor.</dd>
+</dl>
+
+<h4>Estrategias de control e integridad</h4>
+<ul>
+<li><b>Registro estructurado de payload.</b> Por cada inferencia se registra localmente el prompt
+de sistema, el contexto inyectado exacto, la consulta y la respuesta cruda del modelo. Se asocia
+la versión del modelo, la temperatura, la semilla, la latencia y el consumo de tokens. Cada
+registro se etiqueta con el identificador de dominio correspondiente.</li>
+<li><b>Evaluación continua.</b> Ejecución automatizada de conjuntos fijos de pruebas de control
+(<em>golden datasets</em>) sobre el pipeline de producción para monitorizar tasa de alucinación y
+precisión, con detección de deriva antes de que impacte al usuario.</li>
+<li><b>Human-in-the-loop por diseño.</b> Revisión por excepción —la interfaz resalta solo lo que
+tiene baja confianza—, fricción positiva —confirmación explícita antes de exportar— y bucle de
+retroalimentación: cada corrección del ingeniero se almacena para alimentar las pruebas futuras.</li>
+</ul>
+
+<h4>Reglas de oro</h4>
+<div class="oro"><p><b>El ingeniero es la única firma técnica autorizada.</b> La herramienta
+propone, extrae y ancla evidencias; el experto conserva la responsabilidad legal, técnica y
+deontológica de la validación.</p></div>
+<div class="oro"><p><b>Inferencia que no se registra, inferencia que se descarta.</b> Si la capa
+de trazabilidad falla al escribir el log de auditoría, el pipeline detiene su ejecución.</p></div>
+<div class="oro"><p><b>Reproducibilidad antes que creatividad.</b> Queda prohibida la invocación
+en producción con temperatura distinta de cero o semillas dinámicas. Y como la repetibilidad
+exacta no puede garantizarse solo con esos parámetros, la evidencia de auditoría es el registro
+completo de la inferencia.</p></div>
+
+<h3>Subcapítulo 2 · Custodia de datos y soberanía tecnológica</h3>
+<p>Requisitos de seguridad que rigen la conexión con infraestructuras de IA en la nube,
+alineados con el RGPD y con la Ley de Inteligencia Artificial de la Unión Europea.</p>
+
+<h4>Conceptos fundamentales</h4>
+<dl>
+<dt>Zero Data Retention (ZDR)</dt>
+<dd>Garantía contractual que impide al proveedor almacenar, persistir o cachear los textos,
+prompts o documentos enviados al modelo tras completarse la inferencia.</dd>
+<dt>Soberanía del dato</dt>
+<dd>Principio legal y técnico que asegura que los datos y la propiedad intelectual de la
+organización quedan sometidos a la jurisdicción geográfica donde se generan y procesan.</dd>
+</dl>
+
+<h4>Requisitos de infraestructura empresarial</h4>
+<ol>
+<li><b>Retención cero y política de no-entrenamiento.</b> El payload completo existe solo en
+memoria efímera. Compromiso contractual explícito de que ningún dato se usará para preentrenar
+ni ajustar modelos comerciales. Verificación técnica de que la telemetría de depuración está
+desactivada a nivel de política de organización.</li>
+<li><b>Residencia europea de datos.</b> Todo el cómputo confinado a centros de datos de la Unión
+Europea, con bloqueo de enrutamiento transfronterizo en cualquier tramo del flujo.</li>
+<li><b>Cifrado avanzado.</b> TLS 1.3 en tránsito; AES-256 en reposo con claves gestionadas por el
+cliente, de modo que la organización mantiene el control criptográfico y la potestad de revocar
+el acceso.</li>
+<li><b>Aislamiento de telemetría externa.</b> Desactivación del almacenamiento de payloads en las
+herramientas de logging del proveedor. Este solo registra métricas operativas —latencia, cuotas,
+códigos de error— sin visibilidad de los datos de ingeniería.</li>
+<li><b>Aislamiento de red.</b> Endpoints privados, llamadas bloqueadas desde internet pública y
+acceso exclusivo desde un listado cerrado de IPs internas y cuentas de servicio con permisos de
+grano fino.</li>
+</ol>
+
+<h4>Alineamiento con la Ley de IA de la UE</h4>
+<ul>
+<li><b>Art. 12 · Trazabilidad.</b> El registro estructurado local garantiza la trazabilidad
+ininterrumpida exigida para verificar que la herramienta opera dentro de parámetros seguros.</li>
+<li><b>Art. 14 · Supervisión humana.</b> La fricción positiva y la revisión por excepción
+aseguran que el ingeniero no sufra fatiga de atención y ejerza la única autoridad ejecutiva.</li>
+<li><b>Art. 15 · Ciberseguridad y robustez.</b> Delegar la validación y la reconstrucción final
+en la capa determinista —y no en la IA— neutraliza el riesgo de inyecciones en la salida y de
+corrupción de datos industriales en el sistema de destino.</li>
+</ul>
+
+<h4>Reglas de oro</h4>
+<div class="oro"><p><b>La IA nunca tiene conexión directa a producción.</b> Ningún modelo escribe
+en las bases de datos de ingeniería: la salida cognitiva se traduce a formato estructurado y se
+valida en código antes de reinyectarse.</p></div>
+<div class="oro"><p><b>Soberanía o veto de servicio.</b> Si el proveedor no certifica residencia
+europea y retención cero, se aplica veto automático a la integración y se buscan alternativas
+locales.</p></div>
+<div class="oro"><p><b>La propiedad intelectual corporativa es inviolable.</b> El conocimiento
+acumulado en pliegos y especificaciones es la ventaja competitiva de la organización. Ningún dato
+puede usarse para entrenar modelos de terceros.</p></div>
+
+<footer>
+Documento de referencia interna · arquitectura de pipelines cognitivos.
+</footer>
+
+</div>
+</body>
+</html>

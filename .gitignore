@@ -1,0 +1,23 @@
+.env
+__pycache__/
+*.pyc
+# datos: nunca en el repo; solo los .gitkeep de las carpetas de entrada y salida
+data/*
+!data/inputs/
+data/inputs/*
+!data/inputs/stk_reqif/
+data/inputs/stk_reqif/*
+!data/inputs/stk_reqif/.gitkeep
+!data/inputs/supplier_docs/
+data/inputs/supplier_docs/*
+!data/inputs/supplier_docs/.gitkeep
+!data/outputs/
+data/outputs/*
+!data/outputs/reqif/
+data/outputs/reqif/*
+!data/outputs/reqif/.gitkeep
+reference/*
+!reference/.gitkeep
+.pdf_passwords
+_preview/
+logs/
