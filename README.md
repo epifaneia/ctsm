@@ -61,10 +61,21 @@ Three things follow from that table, in order. The local model removes the data 
 
 Beyond the public set, the pipeline has been run on a real customer specification (53 requirements) and its supplier manuals. That data is not in this repository. The screenshots below come from that run, redacted.
 
-## Polarion, real run (redacted)
+## Polarion
 
-<!-- docs/img/polarion-01-import.png · 02-tree.png · 03-requirement.png · 04-status-rationale.png -->
-*Screenshots pending: import dialog, document tree with hierarchy, one requirement with its ForeignID, and the Status enum with the Rationale filled by the pipeline. Names and text blacked out.*
+Public data in a Polarion trial: the nine STM32 requirements against RM0008. Nothing to redact.
+
+*The demo document after import: one heading, nine requirements, each with its verbatim identifier as title.*
+
+![STM32 validation document in Polarion](docs/img/polarion-02-tree.png)
+
+*The same requirement after the pipeline wrote back into the file: the status enum set, the rationale with the citation, and the page and section derived by code from the supplier manual.*
+
+![Requirement with status and rationale filled by CTSM](docs/img/polarion-04-status-rationale.png)
+
+*The ReqIF import mapping in Polarion: the pipeline's fields map onto the project's own fields; nothing is created on the Polarion side.*
+
+![ReqIF import mapping](docs/img/polarion-01-import.png)
 
 ## Demo in five commands (public data)
 
