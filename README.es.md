@@ -61,10 +61,21 @@ De esa tabla salen tres cosas, en orden. El modelo local elimina la salida del d
 
 Además del set público, el pipeline se ha corrido sobre una especificación real de cliente (53 requisitos) y los manuales de su proveedor. Esos datos no están en este repositorio. Las capturas de abajo son de esa corrida, tachadas.
 
-## Polarion, corrida real (tachada)
+## Polarion
 
-<!-- docs/img/polarion-01-import.png · 02-tree.png · 03-requirement.png · 04-status-rationale.png -->
-*Capturas pendientes: diálogo de importación, árbol del documento con jerarquía, un requisito con su ForeignID, y el enum de Status con el Rationale rellenado por el pipeline. Nombres y texto tachados.*
+Datos públicos en un Polarion de prueba: los nueve requisitos de STM32 contra el RM0008. Nada que tachar.
+
+*El documento de demo tras el import: una cabecera, nueve requisitos, cada uno con su identificador verbatim como título.*
+
+![Documento de validación STM32 en Polarion](docs/img/polarion-02-tree.png)
+
+*El mismo requisito después de que el pipeline escribiera en el fichero: el enum de estado puesto, el rationale con la cita, y la página y la sección derivadas por código del manual del proveedor.*
+
+![Requisito con estado y rationale rellenados por CTSM](docs/img/polarion-04-status-rationale.png)
+
+*El mapeo de importación ReqIF en Polarion: los campos del pipeline se mapean a los del proyecto; en el lado de Polarion no se crea nada.*
+
+![Mapeo de importación ReqIF](docs/img/polarion-01-import.png)
 
 ## Demo en cinco comandos (datos públicos)
 
