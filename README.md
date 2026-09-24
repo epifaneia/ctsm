@@ -59,7 +59,7 @@ Three things follow from that table, in order. The local model removes the data 
 
 `tools/score_vs_fixture.py` reproduces the table. Calibrate Ollama threads with the **longest** prompt of the set, not the shortest: a sweep on the short prompt suggested forcing 32 GPU layers for an apparent +59 %; on the long prompt that same setting was worse than Ollama's autofit.
 
-Beyond the public set, the pipeline has been run on a real customer specification (53 requirements) and its supplier manuals. That data is not in this repository. The screenshots below come from that run, redacted.
+Beyond the public set, the pipeline has been run on a real customer specification (53 requirements) and its supplier manuals. That data is not in this repository; the screenshots below are from the public set.
 
 ## Polarion
 

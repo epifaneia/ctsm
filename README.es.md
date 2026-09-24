@@ -59,7 +59,7 @@ De esa tabla salen tres cosas, en orden. El modelo local elimina la salida del d
 
 `tools/score_vs_fixture.py` reproduce la tabla. Calibra los hilos de Ollama con el prompt **más largo** del set, no con el más corto: un barrido con el prompt corto sugería forzar 32 capas en GPU con un +59 % aparente; con el prompt largo ese mismo ajuste era peor que el autofit de Ollama.
 
-Además del set público, el pipeline se ha corrido sobre una especificación real de cliente (53 requisitos) y los manuales de su proveedor. Esos datos no están en este repositorio. Las capturas de abajo son de esa corrida, tachadas.
+Además del set público, el pipeline se ha corrido sobre una especificación real de cliente (53 requisitos) y los manuales de su proveedor. Esos datos no están en este repositorio; las capturas de abajo son del set público.
 
 ## Polarion
 
