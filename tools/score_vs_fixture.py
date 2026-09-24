@@ -31,7 +31,8 @@ STATUS_TO_ROLE = {"Compliant": "yes", "Not compliant": "no", "Unconfirmed": "ope
 
 def _load_results(path: Path) -> dict[str, dict]:
     d = json.loads(path.read_text(encoding="utf-8"))
-    return {r["oem_req_id"]: r for r in d["results"]}
+    # clave: el OEM Req ID si el STK lo trae; si no, el IDENTIFIER del SPEC-OBJECT (demo STK)
+    return {(r.get("oem_req_id") or r["spec_object_id"]): r for r in d["results"]}
 
 
 def main() -> int:
