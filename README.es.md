@@ -47,7 +47,7 @@ Una especificación de cliente tiene decenas de requisitos; el manual del provee
 
 ## Medido
 
-Set: 9 requisitos escritos contra el manual de referencia STM32F10xxx RM0008 (1.136 páginas, documento público de ST), con ground truth construido a mano. Máquina: RTX 2060 de 6 GB, Ryzen 5 3500X.
+Set: 9 requisitos escritos contra el manual de referencia STM32F10xxx RM0008 (1.136 páginas, documento público de ST), con ground truth construido a mano. Máquina: RTX 2060 (6 GB de VRAM), 16 GB de RAM, Ryzen 5 3500X; el 14B no cabe entero en la gráfica y corre repartido entre GPU y CPU.
 
 | Motor | Aciertos vs ground truth | Falsos "cumple" | Segundos / requisito |
 |---|---|---|---|
