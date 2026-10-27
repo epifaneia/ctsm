@@ -34,6 +34,8 @@ import config  # noqa: E402
 
 PIPELINE = ROOT / "pipeline"
 STEPS = [
+    # s0 es idempotente: si el ReqIF ya declara los campos objetivo, lo copia tal cual.
+    ("s0_prepare_stk", "campos objetivo en el ReqIF (esquema)"),
     ("s1_parse_stk", "STK ReqIF → stk.json"),
     ("s2_supplier_corpus", "supplier docs → corpus (docling)"),
     ("s3_retrieve", "requisito → evidencia candidata"),

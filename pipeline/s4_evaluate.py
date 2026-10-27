@@ -162,7 +162,8 @@ def main() -> int:
                   f"(uniformes por el documento). El eval resultante es PARCIAL.")
 
         # Checkpoint: en una corrida de horas, un cuelgue no puede costar todo el
-        # trabajo. Se guarda cada pocos veredictos y al arrancar se reanuda por
+        # trabajo. Se guarda tras cada veredicto (una llamada tarda decenas de
+        # segundos; escribir el JSON, nada) y al arrancar se reanuda por
         # los que falten (CTSM_RESUME=0 para empezar de cero).
         out = config.EVAL_DIR / stk_path.name
         results = []
@@ -203,8 +204,7 @@ def main() -> int:
             results.append(verdict)
             print(f"s4: [{i}/{len(items)}] {oid} → {verdict['status']} "
                   f"({len(verdict.get('evidence') or [])} evidencias, {time.time()-t0:.1f}s)")
-            if i % 5 == 0:
-                _guardar()
+            _guardar()
 
         _guardar()
         print(f"s4: {len(results)} veredictos → {out}")
