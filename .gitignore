@@ -21,3 +21,4 @@ reference/*
 .pdf_passwords
 _preview/
 logs/
+ui/jobs/

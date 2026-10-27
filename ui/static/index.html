@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CTSM · Customer-to-Supplier Mapping</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <span class="mark">CT</span>
+    <div><b>CTSM</b><small data-i18n="tagline">Requisitos del cliente contra la documentación del proveedor</small></div>
+  </div>
+  <div class="right">
+    <span id="modo" class="badge"></span>
+    <span id="motor" class="badge soft"></span>
+    <div class="lang" role="group" aria-label="Idioma / Language">
+      <button data-lang="es" aria-pressed="true">ES</button><button data-lang="en" aria-pressed="false">EN</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- 1 · entrada -->
+  <section id="inicio" class="panel">
+    <h1 data-i18n="h_inicio">Audita una especificación contra la documentación del proveedor</h1>
+    <p class="lead" data-i18n="lead">Devuelve el mismo ReqIF con el veredicto de cada requisito y la cita exacta, anclada a su página. El modelo nunca escribe una ubicación: la pone el código.</p>
+    <div class="inputs">
+      <label class="drop" id="drop-reqif">
+        <span class="ico">⟨/⟩</span>
+        <b data-i18n="in_reqif">Especificación del cliente</b>
+        <small id="reqif-name" data-i18n="in_reqif_hint">.reqif exportado de Polarion</small>
+        <input type="file" id="f-reqif" accept=".reqif" hidden>
+      </label>
+      <span class="vs">→</span>
+      <label class="drop" id="drop-pdf">
+        <span class="ico">▤</span>
+        <b data-i18n="in_pdf">Documentación del proveedor</b>
+        <small id="pdf-name" data-i18n="in_pdf_hint">uno o varios PDF</small>
+        <input type="file" id="f-pdf" accept=".pdf" multiple hidden>
+      </label>
+    </div>
+    <button id="go" class="primary" disabled data-i18n="go">Auditar</button>
+    <p id="nota-demo" class="muted small" hidden></p>
+  </section>
+
+  <!-- 2 · proceso -->
+  <section id="proceso" class="panel" hidden>
+    <div class="steps" id="steps"></div>
+    <div class="tiles">
+      <div class="tile"><span class="n" id="t-req">0/0</span><span data-i18n="t_req">requisitos evaluados</span></div>
+      <div class="tile"><span class="n" id="t-calls">0</span><span data-i18n="t_calls">llamadas al modelo</span></div>
+      <div class="tile ok"><span class="n" id="t-left">0</span><span data-i18n="t_left">salieron de la máquina</span></div>
+      <div class="tile"><span class="n" id="t-time">0 s</span><span data-i18n="t_time">transcurrido</span></div>
+    </div>
+    <p id="aviso-demo" class="muted small" hidden></p>
+  </section>
+
+  <!-- 3 · resultado -->
+  <section id="resultado" hidden>
+    <div class="summary" id="summary"></div>
+    <div class="split">
+      <div class="list" id="rows" role="list"></div>
+      <aside class="detail" id="detail"><p class="muted" data-i18n="pick">Elige un requisito para ver su evidencia.</p></aside>
+    </div>
+    <div class="actions" id="actions"></div>
+  </section>
+</main>
+
+<footer data-i18n="footer">Local · el pipeline corre en esta máquina · la interfaz solo enseña lo que el pipeline escribió</footer>
+<script src="app.js"></script>
+</body>
+</html>

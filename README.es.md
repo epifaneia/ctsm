@@ -6,7 +6,7 @@ Audita los requisitos de una especificación de cliente (un ReqIF exportado de P
 
 > La IA tiene riesgos. El código los acota. La norma responde de lo que queda.
 
-[Filosofía de diseño](#filosofía-de-diseño) · [Dónde aporta valor la IA](#dónde-aporta-valor-la-ia) · [Los cinco pasos](#los-cinco-pasos-en-este-proyecto) · [Medido](#medido) · [Demo](#demo-en-cinco-comandos-datos-públicos) · [Limitaciones](#limitaciones) · [Seguridad y regulación](#seguridad-y-regulación)
+[Filosofía de diseño](#filosofía-de-diseño) · [Dónde aporta valor la IA](#dónde-aporta-valor-la-ia) · [Los cinco pasos](#los-cinco-pasos-en-este-proyecto) · [Medido](#medido) · [Demo](#verlo-en-30-segundos-la-interfaz-en-modo-demo) · [Limitaciones](#limitaciones) · [Seguridad y regulación](#seguridad-y-regulación)
 
 ---
 
@@ -51,11 +51,13 @@ Set: 9 requisitos escritos contra el manual de referencia STM32F10xxx RM0008 (1.
 
 | Motor | Aciertos vs ground truth | Falsos "cumple" | Segundos / requisito |
 |---|---|---|---|
-| gemini (nube) | 9 / 9 | 0 | — |
-| **qwen2.5:14b, local** | **8 / 9** | **0** | 122 → 77 tras calibrar |
-| qwen2.5:7b, local | 7 / 9 | 0 | 25 |
+| **qwen2.5:14b, local** | **9 / 9** | **0** | 119 (autofit de Ollama) |
+| qwen2.5:7b, local | 8 / 9 (7 / 9 en una segunda pasada) | 0 | 26 |
+| gemini (nube) | sin volver a medir | | |
 
-De esa tabla salen tres cosas, en orden. El modelo local elimina la salida del dato. La tarea acotada es lo que hace que un 14B baste. Y lo que el 14B pierde, el guardarraíl lo marca en vez de colarlo: uno de nueve se fue a *Unconfirmed*, ninguno a un falso *Compliant*.
+Medido el 27-10-2026, n = 9: un set pequeño, léelo como prueba de humo, no como benchmark. Las pasadas no son idénticas: el 7B cambió un veredicto entre dos pasadas, siempre entre *Not compliant* y *Unconfirmed*. Una versión anterior de esta tabla usaba identificadores que insinuaban la respuesta esperada (`REQ-STM-ACC-001`, `-REJ-`, `-OPN-`), y el identificador llega al prompt. Ahora son neutros y van mezclados, y los dos modelos locales se han vuelto a medir; los dos han salido mejor que antes. La fila de nube no se ha vuelto a correr.
+
+De esa tabla salen dos cosas. El modelo local elimina la salida del dato, y la tarea acotada es lo que hace que un 14B baste. Lo que un modelo falla, el guardarraíl lo marca en vez de colarlo: el fallo del 7B es un *Not compliant* donde se esperaba *Unconfirmed*, marcado por `s6` porque una de sus dos citas no verificó; ningún modelo dio un falso *Compliant*.
 
 `tools/score_vs_fixture.py` reproduce la tabla. Calibra los hilos de Ollama con el prompt **más largo** del set, no con el más corto: un barrido con el prompt corto sugería forzar 32 capas en GPU con un +59 % aparente; con el prompt largo ese mismo ajuste era peor que el autofit de Ollama.
 
@@ -77,19 +79,32 @@ Datos públicos en un Polarion de prueba: los nueve requisitos de STM32 contra e
 
 ![Mapeo de importación ReqIF](docs/img/polarion-01-import.png)
 
-## Demo en cinco comandos (datos públicos)
+## Verlo en 30 segundos: la interfaz en modo demo
 
 ```bash
 pip install -r requirements.txt
-ollama serve && ollama pull qwen2.5:7b            # local por defecto; nada sale de la máquina
+python ui/app.py --demo                           # → http://127.0.0.1:8078
+```
+
+La demo reproduce una ejecución real grabada (`ui/demo/stm32/`: qwen2.5:14b en la RTX 2060 de arriba) a ×12, y lo dice en pantalla. Sin modelo, sin red, sin datos que descargar. Si el RM0008 está en `data/inputs/supplier_docs/`, cada cita se enseña resaltada en su página del manual. La grabación la hace `ui/grabar_demo.py` a partir de un log de `run.py`; veredictos y citas se copian, nunca se editan.
+
+El modo en vivo, `python ui/app.py` (pide `CUSTODIA_ACTOR`, como `run.py`), recibe un ReqIF y los PDFs del proveedor, corre el mismo pipeline en un sandbox por trabajo, enseña cada veredicto según lo escribe `s4` y ofrece el ReqIF de salida y los tres candados de `roundtrip_diff`.
+
+## El pipeline completo sobre datos públicos
+
+```bash
+pip install -r requirements.txt
+ollama pull qwen2.5:7b                            # con `ollama serve` corriendo en otra terminal
+export CUSTODIA_ACTOR=demo                        # el pipeline no corre de forma anónima
 
 # 1. un ReqIF de partida desde el fixture, clonando el esquema de cualquier ReqIF exportado de tu Polarion
 CTSM_STK_TEMPLATE=ruta/a/cualquier_export.reqif python tools/build_demo_stk.py
 # 2. deja RM0008 (st.com, manual de referencia STM32F10xxx) en data/inputs/supplier_docs/
-python pipeline/s2_supplier_corpus.py             # PDF → corpus (1,9 s para 1.136 páginas)
-python run.py STM32                               # s1 → s7 sobre el fichero de demo
-python tools/roundtrip_diff.py data/inputs/stk_reqif/STM32F10xxx_Validation.reqif data/outputs/reqif/STM32F10xxx_Validation.reqif
+python run.py STM32                               # s0 → s7 sobre el fichero de demo (s2: 1.136 páginas en ~2 s)
+python tools/score_vs_fixture.py STM32 tools/fixtures/stm32_validation_9reqs.json
 ```
+
+`s7` ejecuta él mismo `roundtrip_diff` contra la entrada preparada y falla si cambió algo fuera de los tres campos objetivo.
 
 Este repositorio no lleva datos: ni entradas, ni intermedios, ni salidas. `data/` está fuera de git.
 
@@ -125,6 +140,7 @@ Marco: EU AI Act (2024/1689) · RGPD · ISO/IEC 42001 · ISO/IEC 27001 · TISAX.
 ## Estructura
 
 ```
+ui/          app · engine · static · demo/ (una ejecución real grabada) · grabar_demo
 pipeline/    s0..s7 (s5_config retirado)      docs/       PLAN.md · RISK_roundtrip.md · INTEGRATION.es.md · pipeline_arquitectura.html
 clients/     ollama (local, por defecto) · gemini (nube) · docling_adapter
 prompts/     evaluar_status.txt (taxonomía inyectada en runtime)

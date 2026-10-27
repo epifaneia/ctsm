@@ -1,0 +1,212 @@
+{
+  "stk": "STM32F10xxx_Validation",
+  "generated_by": "s6_verify (sellado)",
+  "status_enum_values": {
+    "Compliant": "ctsm-80029695-6cbc-5d62-9bc0-11a9720c84c6",
+    "Not compliant": "ctsm-6b7f3a2a-258a-5a67-8a68-529458678ef4",
+    "Unconfirmed": "ctsm-ac75abae-c210-5a8c-bdf7-b77ef2a67ee7"
+  },
+  "results": [
+    {
+      "spec_object_id": "REQ-STM-001",
+      "oem_req_id": null,
+      "status": "Unconfirmed",
+      "rationale": "The documentation specifies that the HSE crystal can operate at frequencies between 4-16 MHz or 3-25 MHz, but does not explicitly mention a precisely tuned 12.000 MHz quartz crystal oscillator.\n\nEvidence:\n[RM0008 p.128 §8.2.1 HSE clock] \"The 4 to 16 MHz external oscillator has the advantage of producing a very accurate rate on the main clock.\"\n[RM0008 p.133 §0 HSICAL[7:0]] \"external 3-25 MHz oscillator not bypassed\"",
+      "comments": "The requirement specifies a precise frequency of 12.000 MHz, but the documentation only mentions ranges for HSE crystal operation (4-16 MHz or 3-25 MHz). Clarification is needed to confirm if this specific frequency is supported.",
+      "evidence": [
+        {
+          "chunk_id": "RM0008-C0197",
+          "doc": "RM0008",
+          "section": "§8.2.1 HSE clock",
+          "page": 128,
+          "quote": "The 4 to 16 MHz external oscillator has the advantage of producing a very accurate rate on the main clock.",
+          "match_ratio": 0.962
+        },
+        {
+          "chunk_id": "RM0008-C0210",
+          "doc": "RM0008",
+          "section": "§0 HSICAL[7:0]",
+          "page": 133,
+          "quote": "external 3-25 MHz oscillator not bypassed",
+          "match_ratio": 1.0
+        }
+      ],
+      "flags": []
+    },
+    {
+      "spec_object_id": "REQ-STM-002",
+      "oem_req_id": null,
+      "status": "Compliant",
+      "rationale": "The documentation explicitly states that the CRC calculation unit computes a CRC code from a 32-bit data word, which aligns with the requirement for calculating a software signature during runtime using a 32-bit data word.\n\nEvidence:\n[RM0008 p.63 §4.1 CRC introduction] \"The CRC calculation unit is used to get a CRC code from a 32-bit data word and a fixed generator polynomial.\"\n[RM0008 p.64 §4.3 CRC functional description] \"Each write operation into the data register creates a combination of the previous CRC value and the new one (CRC computation is done on the whole 32-bit data word, and not byte per byte).\"\n[RM0008 p.64 §4.4 CRC registers] \"The CRC calculation unit contains two data registers and a control register. The peripheral The CRC registers have to be accessed by words (32 bits).\"",
+      "comments": "The system includes a CRC calculation unit that computes a software signature during runtime using a 32-bit data word, as required.",
+      "evidence": [
+        {
+          "chunk_id": "RM0008-C0090",
+          "doc": "RM0008",
+          "section": "§4.1 CRC introduction",
+          "page": 63,
+          "quote": "The CRC calculation unit is used to get a CRC code from a 32-bit data word and a fixed generator polynomial.",
+          "match_ratio": 0.944
+        },
+        {
+          "chunk_id": "RM0008-C0092",
+          "doc": "RM0008",
+          "section": "§4.3 CRC functional description",
+          "page": 64,
+          "quote": "Each write operation into the data register creates a combination of the previous CRC value and the new one (CRC computation is done on the whole 32-bit data word, and not byte per byte).",
+          "match_ratio": 0.989
+        },
+        {
+          "chunk_id": "RM0008-C0093",
+          "doc": "RM0008",
+          "section": "§4.4 CRC registers",
+          "page": 64,
+          "quote": "The CRC calculation unit contains two data registers and a control register. The peripheral The CRC registers have to be accessed by words (32 bits).",
+          "match_ratio": 0.986
+        }
+      ],
+      "flags": []
+    },
+    {
+      "spec_object_id": "REQ-STM-003",
+      "oem_req_id": null,
+      "status": "Not compliant",
+      "rationale": "The documentation explicitly states that the backup registers provide only 84 bytes of user application data in high-density, XL-density and connectivity line devices, which is less than the required 256 bytes.\n\nEvidence:\n[RM0008 p.81 §6.1 BKP introduction] \"The backup registers are forty two 16-bit registers for storing 84 bytes of user application data.\"\n[RM0008 p.81 §6.2 BKP main features] \"84-byte data registers (in high-density, XL-density and connectivity line devices)\"",
+      "comments": "The product does not provide the required 256 bytes of backup registers for storing user application data. The documented limit is 84 bytes.",
+      "evidence": [
+        {
+          "chunk_id": "RM0008-C0123",
+          "doc": "RM0008",
+          "section": "§6.1 BKP introduction",
+          "page": 81,
+          "quote": "The backup registers are forty two 16-bit registers for storing 84 bytes of user application data.",
+          "match_ratio": 0.99
+        },
+        {
+          "chunk_id": "RM0008-C0124",
+          "doc": "RM0008",
+          "section": "§6.2 BKP main features",
+          "page": 81,
+          "quote": "84-byte data registers (in high-density, XL-density and connectivity line devices)",
+          "match_ratio": 0.988
+        }
+      ],
+      "flags": []
+    },
+    {
+      "spec_object_id": "REQ-STM-004",
+      "oem_req_id": null,
+      "status": "Compliant",
+      "rationale": "The documentation explicitly states that the device requires a 2.0-to-3.6 V operating voltage supply (VDD), which matches the requirement.\n\nEvidence:\n[RM0008 p.67 §5.1 Power supplies] \"The device requires a 2.0-to-3.6 V operating voltage supply (VDD).\"",
+      "comments": "The microcontroller complies with the requirement for a primary voltage supply ranging from 2.0 V to 3.6 V.",
+      "evidence": [
+        {
+          "chunk_id": "RM0008-C0100",
+          "doc": "RM0008",
+          "section": "§5.1 Power supplies",
+          "page": 67,
+          "quote": "The device requires a 2.0-to-3.6 V operating voltage supply (VDD).",
+          "match_ratio": 1.0
+        }
+      ],
+      "flags": []
+    },
+    {
+      "spec_object_id": "REQ-STM-005",
+      "oem_req_id": null,
+      "status": "Unconfirmed",
+      "rationale": "The documentation does not provide explicit information about the maximum interrupt response and processing time for incoming CAN messages, which is required by REQ-STM-005.",
+      "comments": "Insufficient information in the provided documentation to confirm compliance with the requirement. The topic appears to be an application-level decision.",
+      "evidence": [],
+      "flags": []
+    },
+    {
+      "spec_object_id": "REQ-STM-006",
+      "oem_req_id": null,
+      "status": "Not compliant",
+      "rationale": "The documentation explicitly states that the OTG_FS controller only supports full-speed (FS) transfers at 12 Mbits/s in device mode, which is below the required High-Speed (HS) data transfer rate of 480 Mbit/s.\n\nEvidence:\n[RM0008 p.828 §28.1 OTG_FS introduction] \"in device mode, it only supports full-speed (FS, 12 Mbits/s) transfers.\"",
+      "comments": "The requirement specifies High-Speed data transfer support in device mode, but the documentation clearly states that the OTG_FS controller only supports Full-Speed in this mode. This is a documented capability limit below the required speed.",
+      "evidence": [
+        {
+          "chunk_id": "RM0008-C1297",
+          "doc": "RM0008",
+          "section": "§28.1 OTG_FS introduction",
+          "page": 828,
+          "quote": "in device mode, it only supports full-speed (FS, 12 Mbits/s) transfers.",
+          "match_ratio": 0.986
+        }
+      ],
+      "flags": []
+    },
+    {
+      "spec_object_id": "REQ-STM-007",
+      "oem_req_id": null,
+      "status": "Compliant",
+      "rationale": "The documentation explicitly states that the Ethernet MAC supports both 10 Mbit/s and 100 Mbit/s operating rates, as required by REQ-STM-007.\n\nEvidence:\n[RM0008 p.979 §29.5 Ethernet functional description: MAC 802.3] \"The MAC block implements the LAN CSMA/CD sublayer for the following families of systems: 10 Mbit/s and 100 Mbit/s of data rates for baseband and broadband systems.\"\n[RM0008 p.978 §25 MHz] \"It supports 10-Mbit/s and 100-Mbit/s operating rates\"",
+      "comments": "The Ethernet MAC communication is supported at both 10 Mbit/s and 100 Mbit/s as specified in the requirement.",
+      "evidence": [
+        {
+          "chunk_id": "RM0008-C1490",
+          "doc": "RM0008",
+          "section": "§29.5 Ethernet functional description: MAC 802.3",
+          "page": 979,
+          "quote": "The MAC block implements the LAN CSMA/CD sublayer for the following families of systems: 10 Mbit/s and 100 Mbit/s of data rates for baseband and broadband systems.",
+          "match_ratio": 0.994
+        },
+        {
+          "chunk_id": "RM0008-C1487",
+          "doc": "RM0008",
+          "section": "§25 MHz",
+          "page": 978,
+          "quote": "It supports 10-Mbit/s and 100-Mbit/s operating rates",
+          "match_ratio": 1.0
+        }
+      ],
+      "flags": []
+    },
+    {
+      "spec_object_id": "REQ-STM-008",
+      "oem_req_id": null,
+      "status": "Unconfirmed",
+      "rationale": "The documentation indicates that the backup domain can be powered by VBAT, but it does not explicitly state that VBAT is exclusively powered by a primary Lithium-ion coin cell battery. The requirement specifies an exclusive power source for the backup domain (VBAT), which is not directly addressed in the provided excerpts.\n\nEvidence:\n[RM0008 p.69 §5.1.2 Battery backup domain] \"To retain the content of the Backup registers and supply the RTC function when VDD is turned off, VBAT pin can be connected to an optional standby voltage supplied by a battery or by another source.\"\n[RM0008 p.81 §6.1 BKP introduction] \"The backup registers are forty two 16-bit registers for storing 84 bytes of user application data. They are implemented in the backup domain that remains powered on by VBAT when the VDD power is switched off.\"",
+      "comments": "Please clarify if the backup domain (VBAT) can only be powered by a primary Lithium-ion coin cell battery or if other sources are allowed.",
+      "evidence": [
+        {
+          "chunk_id": "RM0008-C0103",
+          "doc": "RM0008",
+          "section": "§5.1.2 Battery backup domain",
+          "page": 69,
+          "quote": "To retain the content of the Backup registers and supply the RTC function when VDD is turned off, VBAT pin can be connected to an optional standby voltage supplied by a battery or by another source.",
+          "match_ratio": 0.99
+        },
+        {
+          "chunk_id": "RM0008-C0123",
+          "doc": "RM0008",
+          "section": "§6.1 BKP introduction",
+          "page": 81,
+          "quote": "The backup registers are forty two 16-bit registers for storing 84 bytes of user application data. They are implemented in the backup domain that remains powered on by VBAT when the VDD power is switched off.",
+          "match_ratio": 0.986
+        }
+      ],
+      "flags": []
+    },
+    {
+      "spec_object_id": "REQ-STM-009",
+      "oem_req_id": null,
+      "status": "Not compliant",
+      "rationale": "The documentation explicitly states that the I2S audio protocol is not available in low- and medium-density devices, which contradicts the requirement.\n\nEvidence:\n[RM0008 p.723 §25.4 I2S functional description] \"The I2S audio protocol is not available in low- and medium-density devices.\"",
+      "comments": "Deviation request: The documented limit states that the I2S audio protocol is not supported on low- and medium-density devices, which contradicts REQ-STM-009.",
+      "evidence": [
+        {
+          "chunk_id": "RM0008-C1161",
+          "doc": "RM0008",
+          "section": "§25.4 I2S functional description",
+          "page": 723,
+          "quote": "The I2S audio protocol is not available in low- and medium-density devices.",
+          "match_ratio": 1.0
+        }
+      ],
+      "flags": []
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "objects": [
+    {
+      "identifier": "STM32F10XXXV_SO-H-0001",
+      "text": "Hardware Specifications & Validation"
+    },
+    {
+      "identifier": "REQ-STM-001",
+      "text": "REQ-STM-001\n\nThe external high-speed clock (HSE) circuit shall be driven by a precisely tuned 12.000 MHz quartz crystal oscillator."
+    },
+    {
+      "identifier": "REQ-STM-002",
+      "text": "REQ-STM-002\n\nThe system shall include a CRC calculation unit to compute a software signature during runtime using a 32-bit data word."
+    },
+    {
+      "identifier": "REQ-STM-003",
+      "text": "REQ-STM-003\n\nThe backup domain shall provide at least 256 bytes of backup registers for storing user application data."
+    },
+    {
+      "identifier": "REQ-STM-004",
+      "text": "REQ-STM-004\n\nThe microcontroller shall operate with a primary voltage supply (VDD) ranging from 2.0 V to 3.6 V."
+    },
+    {
+      "identifier": "REQ-STM-005",
+      "text": "REQ-STM-005\n\nThe application software shall guarantee a maximum interrupt response and processing time of 5 milliseconds for incoming CAN messages."
+    },
+    {
+      "identifier": "REQ-STM-006",
+      "text": "REQ-STM-006\n\nThe USB On-The-Go (OTG) interface shall support High-Speed (480 Mbit/s) data transfers when operating in device mode."
+    },
+    {
+      "identifier": "REQ-STM-007",
+      "text": "REQ-STM-007\n\nConnectivity line devices shall support Ethernet MAC communication at both 10 Mbit/s and 100 Mbit/s operating rates."
+    },
+    {
+      "identifier": "REQ-STM-008",
+      "text": "REQ-STM-008\n\nThe backup domain (VBAT) shall be powered exclusively by a primary Lithium-ion coin cell battery."
+    },
+    {
+      "identifier": "REQ-STM-009",
+      "text": "REQ-STM-009\n\nThe I2S audio protocol interface shall be available and supported across all low-density and medium-density devices."
+    }
+  ]
+}

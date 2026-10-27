@@ -6,7 +6,7 @@ Audits the requirements of a customer specification (a ReqIF exported from Polar
 
 > AI carries risk. Code bounds it. The standard answers for what remains.
 
-[Design philosophy](#design-philosophy) · [Why AI here](#why-ai-here) · [The five steps](#the-five-steps-in-this-project) · [Measured](#measured) · [Demo](#demo-in-five-commands-public-data) · [Limitations](#limitations) · [Security & regulation](#security--regulation)
+[Design philosophy](#design-philosophy) · [Why AI here](#why-ai-here) · [The five steps](#the-five-steps-in-this-project) · [Measured](#measured) · [Demo](#see-it-in-30-seconds-the-interface-in-demo-mode) · [Limitations](#limitations) · [Security & regulation](#security--regulation)
 
 ---
 
@@ -51,11 +51,13 @@ Set: 9 requirements written against the STM32F10xxx reference manual RM0008 (1,1
 
 | Engine | Hits vs ground truth | False "compliant" | Seconds / requirement |
 |---|---|---|---|
-| gemini (cloud) | 9 / 9 | 0 | — |
-| **qwen2.5:14b, local** | **8 / 9** | **0** | 122 → 77 after calibration |
-| qwen2.5:7b, local | 7 / 9 | 0 | 25 |
+| **qwen2.5:14b, local** | **9 / 9** | **0** | 119 (Ollama autofit) |
+| qwen2.5:7b, local | 8 / 9 (7 / 9 in a second run) | 0 | 26 |
+| gemini (cloud) | not re-measured yet | | |
 
-Three things follow from that table, in order. The local model removes the data leaving the machine. The bounded task is what makes a 14B enough. And what the 14B misses, the guardrail flags instead of letting through: one of nine went to *Unconfirmed*, none to a false *Compliant*.
+Measured on 2026-10-27, n = 9: a small set, read it as a smoke test, not a benchmark. Runs are not identical: the 7B changed one verdict between two passes, always between *Not compliant* and *Unconfirmed*. An earlier version of this table used requirement ids that hinted the expected answer (`REQ-STM-ACC-001`, `-REJ-`, `-OPN-`), and the id reaches the prompt. The ids are now neutral and shuffled, and both local models were re-measured; both scored higher than before. The cloud row has not been re-run.
+
+Two things follow from that table. The local model removes the data leaving the machine, and the bounded task is what makes a 14B enough. What a model misses, the guardrail flags instead of letting through: the 7B miss is a *Not compliant* where the expected answer was *Unconfirmed*, flagged by `s6` because one of its two quotes did not verify; neither model produced a false *Compliant*.
 
 `tools/score_vs_fixture.py` reproduces the table. Calibrate Ollama threads with the **longest** prompt of the set, not the shortest: a sweep on the short prompt suggested forcing 32 GPU layers for an apparent +59 %; on the long prompt that same setting was worse than Ollama's autofit.
 
@@ -77,19 +79,32 @@ Public data in a Polarion trial: the nine STM32 requirements against RM0008. Not
 
 ![ReqIF import mapping](docs/img/polarion-01-import.png)
 
-## Demo in five commands (public data)
+## See it in 30 seconds: the interface in demo mode
 
 ```bash
 pip install -r requirements.txt
-ollama serve && ollama pull qwen2.5:7b            # local by default; nothing leaves the machine
+python ui/app.py --demo                           # → http://127.0.0.1:8078
+```
+
+The demo replays a real recorded run (`ui/demo/stm32/`: qwen2.5:14b on the RTX 2060 above) at ×12, and says so on screen. No model, no network, no data to download. If RM0008 is in `data/inputs/supplier_docs/`, each quote is shown highlighted on its page of the manual. The recording is made by `ui/grabar_demo.py` from a `run.py` log; verdicts and quotes are copied, never edited.
+
+Live mode, `python ui/app.py` (needs `CUSTODIA_ACTOR`, like `run.py`), takes a ReqIF and the supplier PDFs, runs the same pipeline in a sandbox per job, shows each verdict as `s4` writes it, and offers the output ReqIF and the three `roundtrip_diff` locks.
+
+## The full pipeline on public data
+
+```bash
+pip install -r requirements.txt
+ollama pull qwen2.5:7b                            # with `ollama serve` running in another terminal
+export CUSTODIA_ACTOR=demo                        # the pipeline does not run anonymously
 
 # 1. a starting ReqIF from the fixture, cloning the schema of any ReqIF exported from your Polarion
 CTSM_STK_TEMPLATE=path/to/any_export.reqif python tools/build_demo_stk.py
 # 2. drop RM0008 (st.com, reference manual STM32F10xxx) in data/inputs/supplier_docs/
-python pipeline/s2_supplier_corpus.py             # PDF → corpus (1.9 s for 1,136 pages)
-python run.py STM32                               # s1 → s7 on the demo file
-python tools/roundtrip_diff.py data/inputs/stk_reqif/STM32F10xxx_Validation.reqif data/outputs/reqif/STM32F10xxx_Validation.reqif
+python run.py STM32                               # s0 → s7 on the demo file (s2: 1,136 pages in ~2 s)
+python tools/score_vs_fixture.py STM32 tools/fixtures/stm32_validation_9reqs.json
 ```
+
+`s7` runs `roundtrip_diff` itself against the prepared input and fails if anything outside the three target fields changed.
 
 This repository ships no data: no inputs, no intermediates, no outputs. `data/` is ignored by git.
 
@@ -125,6 +140,7 @@ Framework: EU AI Act (2024/1689) · GDPR · ISO/IEC 42001 · ISO/IEC 27001 · TI
 ## Structure
 
 ```
+ui/          app · engine · static · demo/ (a recorded real run) · grabar_demo
 pipeline/    s0..s7 (s5_config retired)      docs/       PLAN.md · RISK_roundtrip.md · INTEGRATION.md · pipeline_arquitectura.html
 clients/     ollama (local, default) · gemini (cloud) · docling_adapter
 prompts/     evaluar_status.txt (taxonomy injected at runtime)

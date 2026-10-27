@@ -5,3 +5,8 @@ docling              # s2 supplier docs feos (escaneados/Word) — pendiente de 
 PyMuPDF              # s2 PDFs digitales: extracción rápida con anclaje por página
 rank-bm25            # s3 retrieval léxico (corpus > CORPUS_MAX_CHARS)
 rapidfuzz            # s6 guard: fuzzy match quote ↔ chunk citado + página exacta
+
+# interfaz (ui/app.py)
+fastapi              # servidor local de la interfaz
+uvicorn
+python-multipart     # subida de ReqIF y PDFs en modo en vivo

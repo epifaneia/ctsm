@@ -1,0 +1,35 @@
+{
+  "stem": "STM32F10xxx_Validation",
+  "reqif": "STM32F10xxx_Validation.reqif",
+  "supplier_docs": "RM0008.pdf",
+  "engine": "ollama · qwen2.5:14b",
+  "recorded": "2026-10-27",
+  "machine": "RTX 2060 6 GB",
+  "total": 9,
+  "total_seconds": 1073.0,
+  "steps": {
+    "s0_prepare_stk": 0.2,
+    "s1_parse_stk": 0.1,
+    "s2_supplier_corpus": 2.5,
+    "s3_retrieve": 0.8,
+    "s6_verify": 0.4,
+    "s7_inject": 0.3,
+    "s4_schema": 0.2
+  },
+  "s4_per_requirement": [
+    221.8,
+    152.7,
+    84.9,
+    66.4,
+    91.2,
+    99.5,
+    141.9,
+    110.5,
+    99.5
+  ],
+  "custody": {
+    "calls": 9,
+    "left_machine": 0,
+    "model_seconds": 1068.4
+  }
+}
