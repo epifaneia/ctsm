@@ -3,11 +3,22 @@
 Comprobaciones por requisito antes de sellar results.json:
 
   1. status ∈ enum del STK (garantizado por schema en s4; se re-verifica).
-  2. Cada evidencia: la quote EXISTE en el chunk CITADO (rapidfuzz
-     partial_ratio ≥ config.QUOTE_MIN_RATIO). Más estricto que buscar en el
-     corpus entero: la cita debe estar donde el LLM dijo que estaba.
+  2. Cada evidencia: la quote EXISTE en el chunk CITADO. Más estricto que buscar
+     en el corpus entero: la cita debe estar donde el LLM dijo que estaba.
+       · literal tras normalizar el ruido tipográfico del PDF (utils/text_norm):
+         sin umbral, o está o no está;
+       · si no es literal pero se parece (rapidfuzz partial_ratio ≥
+         config.QUOTE_MIN_RATIO), el modelo parafraseó: se acepta, pero la cita
+         pasa a ser el TEXTO DEL MANUAL con el que casó, y se marca
+         «cita_aproximada». Si el modelo cambió una cifra, el revisor ve la del
+         manual, no la del modelo;
+       · por debajo, se descarta.
+     La cita guardada es SIEMPRE texto del documento, nunca del modelo.
      La PÁGINA exacta se deriva del offset del match dentro del chunk
      (page_map de s2) — el LLM nunca escribió ubicaciones.
+  2b. En modo revision (run.py --modo revision) el estado y las citas vienen de
+     s5_review, que juzga cada pasaje: un solo «contradice» basta para el «no».
+     Sus citas se verifican igual. Queda marcado qué cambió respecto a s4.
   3. Veredicto ≠ "open" exige ≥1 evidencia VERIFICADA; si no → degradado al
      valor open de la taxonomía (Unconfirmed/In review) + flag "demoted".
   4. Cobertura: todo requisito evaluable sin veredicto → open + flag
@@ -27,6 +38,8 @@ Uso:  python pipeline/s6_verify.py [substring]
 from __future__ import annotations
 
 import json
+import os
+import re
 import sys
 from pathlib import Path
 
@@ -34,6 +47,43 @@ from rapidfuzz import fuzz
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import config  # noqa: E402
+from utils.text_norm import find_literal_span  # noqa: E402
+
+
+def _a_frase(texto: str, quote: str, ini: int, fin: int, margen: int = 80) -> tuple[int, int]:
+    """Ensancha el tramo de una cita aproximada: el alineamiento de rapidfuzz corta a media
+    frase o a media palabra. El inicio se ancla donde empiezan las primeras palabras de la
+    cita del modelo («The CRC…»), si están cerca; si no, al principio de la frase. El final,
+    al final de la frase. Siempre a palabras enteras."""
+    corte = re.compile(r"[.!?:;]\s|\n\s*\n")
+    palabras = quote.split()
+    ancla = -1
+    for n in (2, 1):
+        if len(palabras) >= n and len(" ".join(palabras[:n])) >= 3:
+            ancla = texto.rfind(" ".join(palabras[:n]), max(0, ini - margen), ini + len(palabras[0]) + 1)
+            if ancla >= 0:
+                break
+    previos = [m.end() for m in corte.finditer(texto, max(0, ini - margen), ini)]
+    if ancla >= 0:
+        ini = ancla
+    elif previos:
+        ini = previos[-1]
+    else:
+        while ini > 0 and not texto[ini - 1].isspace():
+            ini -= 1
+    siguiente = corte.search(texto, max(ini, fin - 1), min(len(texto), fin + margen))
+    if siguiente:
+        fin = siguiente.start() + 1
+    else:
+        while fin < len(texto) and not texto[fin].isspace():
+            fin += 1
+    return ini, fin
+
+
+def _como_se_lee(tramo: str) -> str:
+    """El tramo del PDF como lo lee una persona: palabras partidas a final de línea
+    («oper-\\nating») recompuestas y el espacio en blanco colapsado. No cambia ni una letra."""
+    return " ".join(re.sub(r"(\w)-[ \t]*\r?\n\s*(\w)", r"\1\2", tramo).split())
 
 
 def _page_of(chunk: dict, offset: int) -> int:
@@ -52,23 +102,64 @@ def _verify_evidence(ev: dict, chunk_by_id: dict) -> tuple[dict | None, str | No
     quote = (ev.get("quote") or "").strip()
     if len(quote) < 10:
         return None, f"quote vacía/corta en {ev['chunk_id']}"
-    aln = fuzz.partial_ratio_alignment(quote, chunk["text"])
-    ratio = (aln.score if aln else 0.0) / 100.0
-    if ratio < config.QUOTE_MIN_RATIO:
-        return None, f"quote no encontrada en {ev['chunk_id']} (ratio {ratio:.2f})"
-    return {
+    texto = chunk["text"]
+    span = find_literal_span(quote, texto)
+    if span:
+        ini, fin, ratio, literal = *span, 1.0, True
+    else:
+        aln = fuzz.partial_ratio_alignment(quote, texto)
+        ratio = (aln.score if aln else 0.0) / 100.0
+        if ratio < config.QUOTE_MIN_RATIO:
+            return None, f"quote no encontrada en {ev['chunk_id']} (ratio {ratio:.2f})"
+        ini, fin = _a_frase(texto, quote, aln.dest_start, aln.dest_end)
+        literal = False
+    out = {
         "chunk_id": chunk["chunk_id"],
         "doc": chunk["doc"],
         "section": chunk["section"],
-        "page": _page_of(chunk, aln.dest_start),
-        "quote": quote,
+        "page": _page_of(chunk, ini),
+        "quote": _como_se_lee(texto[ini:fin]),          # el texto del manual, no el del modelo
         "match_ratio": round(ratio, 3),
-    }, None
+        "literal": literal,
+    }
+    if not literal:
+        out["quote_modelo"] = quote                      # lo que escribió el modelo, para auditar la diferencia
+    return out, None
 
 
 def _citation(ev: dict) -> str:
     sec = f" {ev['section']}" if ev["section"] else ""
-    return f'[{ev["doc"]} p.{ev["page"]}{sec}] "{ev["quote"]}"'
+    marca = " (contradice)" if ev.get("juicio") == "contradice" else ""
+    return f'[{ev["doc"]} p.{ev["page"]}{sec}] "{ev["quote"]}"{marca}'
+
+
+def _sellar_revision(r: dict, status_s4: str, analysis: str, chunk_by_id: dict,
+                     status_names: set, open_name: str, flags: list[str]) -> tuple[str, str, list[dict]]:
+    """Modo revision: el estado lo fija s5_review (un 'contradice' manda) y la evidencia son
+    sus pasajes que apoyan o contradicen. Sus citas ya son literales por construcción
+    (utils/citables), pero se verifican igual que las de s4: aquí no se confía en nadie."""
+    status = r["status_revisado"] if r["status_revisado"] in status_names else open_name
+    if status != status_s4:
+        flags.append(f"revision:{status_s4}->{status}" + (" (arbitrado por el modelo grande)" if r.get("escalado") else ""))
+    verified = []
+    for j in r.get("juicios") or []:
+        if j.get("juicio") not in ("apoya", "contradice"):
+            continue
+        ok, why = _verify_evidence({"chunk_id": j["chunk_id"], "quote": j.get("quote")}, chunk_by_id)
+        if ok:
+            ok["juicio"] = j["juicio"]
+            verified.append(ok)
+        else:
+            flags.append(f"quote_failed:{why}")
+    apoyan = sum(v["juicio"] == "apoya" for v in verified)
+    contra = [v["chunk_id"] for v in verified if v["juicio"] == "contradice"]
+    if contra:
+        flags.append(f"contradice:{', '.join(contra)}")
+    if status != status_s4:
+        # el razonamiento de s4 defendía otro estado: no se deja junto a un veredicto que no sostiene
+        analysis = (f"Revisión pasaje a pasaje: {apoyan} lo apoya(n) y {len(contra)} lo contradice(n). "
+                    "Regla: un solo pasaje que contradiga basta para el «no».")
+    return status, analysis, verified
 
 
 def main() -> int:
@@ -92,6 +183,15 @@ def main() -> int:
             return 1
         evals = {e["spec_object_id"]: e
                  for e in json.loads(eval_path.read_text(encoding="utf-8"))}
+        # modo revision (run.py --modo revision): manda el juicio por pasaje de s5_review
+        revision: dict = {}
+        if os.environ.get("CTSM_MODO") == "revision":
+            rev_path = config.REVIEW_DIR / stk_path.name
+            if not rev_path.is_file():
+                print(f"s6: modo revision sin {rev_path.name} — ¿corrió s5_review?")
+                return 1
+            revision = {r["spec_object_id"]: r
+                        for r in json.loads(rev_path.read_text(encoding="utf-8"))}
         sem = stk.get("status_semantics") or {}
         open_name = sem.get("open") or config.STATUS_DEFAULT
         status_names = set(stk["status_enum_values"]) or set(config.STATUS_TAXONOMY)
@@ -117,8 +217,14 @@ def main() -> int:
                     ok, why = _verify_evidence(ev, chunk_by_id)
                     if ok:
                         verified.append(ok)
+                        if not ok["literal"]:
+                            flags.append(f"cita_aproximada:{ok['chunk_id']} ({ok['match_ratio']:.2f}): "
+                                         "se muestra el texto del manual")
                     else:
                         flags.append(f"quote_failed:{why}")
+                if oid in revision:
+                    status, analysis, verified = _sellar_revision(
+                        revision[oid], status, analysis, chunk_by_id, status_names, open_name, flags)
                 if status != open_name and not verified:
                     flags.append(f"demoted:{status}->{open_name}")
                     status = open_name

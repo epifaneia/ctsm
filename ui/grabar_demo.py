@@ -34,6 +34,8 @@ def main() -> int:
     ap.add_argument("run_log", type=Path)
     ap.add_argument("fixture", type=Path, nargs="?")
     ap.add_argument("--machine", default="")
+    ap.add_argument("--fecha", default=datetime.date.today().isoformat(),
+                    help="día de la ejecución grabada (por defecto hoy; al volver a sellar una ejecución antigua, su día)")
     a = ap.parse_args()
 
     log = a.run_log.read_text(encoding="utf-8")
@@ -60,20 +62,22 @@ def main() -> int:
     timeline = {
         "stem": stem, "reqif": reqif, "supplier_docs": " · ".join(f"{d}.pdf" for d in docs),
         "engine": (engine.group(1) if engine else "?").replace("ollama:", "ollama · "),
-        "recorded": datetime.date.today().isoformat(), "machine": a.machine,
+        "recorded": a.fecha, "machine": a.machine,
         "total": len(results["results"]), "total_seconds": round(sum(steps.values()), 1),
         "steps": {**{k: v for k, v in steps.items() if k != "s4_evaluate"}, "s4_schema": 0.2},
         "s4_per_requirement": s4,
         "custody": {"calls": len(s4), "left_machine": 0 if "AIR-GAP" in log else len(s4),
                     "model_seconds": round(sum(s4), 1)},
     }
-    (out / "timeline.json").write_text(json.dumps(timeline, ensure_ascii=False, indent=2), encoding="utf-8")
-    (out / "results.json").write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding="utf-8")
-    (out / "stk.json").write_text(json.dumps(stk, ensure_ascii=False, indent=2), encoding="utf-8")
+    # newline="\n": en Windows write_text escribiría CRLF y git vería el fichero entero cambiado
+    escribe = lambda nombre, datos: (out / nombre).write_text(  # noqa: E731
+        json.dumps(datos, ensure_ascii=False, indent=2), encoding="utf-8", newline="\n")
+    escribe("timeline.json", timeline)
+    escribe("results.json", results)
+    escribe("stk.json", stk)
     if a.fixture:
         fx = json.loads(a.fixture.read_text(encoding="utf-8"))
-        truth = {r["req_id"]: COVERAGE_TO_ROLE[r["coverage"]] for r in fx["requisitos"]}
-        (out / "truth.json").write_text(json.dumps(truth, indent=2), encoding="utf-8")
+        escribe("truth.json", {r["req_id"]: COVERAGE_TO_ROLE[r["coverage"]] for r in fx["requisitos"]})
     print(f"grabar_demo: {out.relative_to(ROOT)} · {len(s4)} requisitos · {timeline['engine']}")
     return 0
 

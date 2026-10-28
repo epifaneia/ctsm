@@ -240,8 +240,10 @@ def main() -> int:
 
     config.CORPUS_DIR.mkdir(parents=True, exist_ok=True)
     out = config.CORPUS_DIR / "corpus.json"
-    out.write_text(json.dumps({"docs": docs_meta, "chunks": all_chunks},
+    tmp = out.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps({"docs": docs_meta, "chunks": all_chunks},
                               ensure_ascii=False), encoding="utf-8")
+    tmp.replace(out)          # atómico: quien lo lea nunca ve un corpus a medias
     print(f"s2: corpus → {out}  ({len(all_chunks)} chunks totales)")
     return 0
 

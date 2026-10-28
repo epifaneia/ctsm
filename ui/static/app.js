@@ -16,7 +16,8 @@ const T = {
     demo_note: (d) => `Reproducción acelerada ×${d.speed} de una ejecución real: ${d.engine}, ${d.recorded}, ${d.machine}. Veredictos y citas, los grabados.`,
     demo_input: (d) => [`${d.reqif} · ${d.total} requisitos`, d.supplier_docs],
     evidence: "Evidencia verificada por el código", why: "Análisis del modelo", none: "Sin evidencia verificada: el código degradó el veredicto al valor abierto.",
-    match: "coincidencia", page: "pág.", noimg: "La página no se puede mostrar: el PDF del proveedor no está en esta máquina.",
+    match: "coincidencia", page: "pág.", literal: "literal en el manual",
+    approx: "aproximada: arriba, el texto del manual", paraphrase: "El modelo escribió:", noimg: "La página no se puede mostrar: el PDF del proveedor no está en esta máquina.",
     expected: "Ground truth", hit: "acierto", miss: "fallo", roles: { yes: "cumple", no: "no cumple", open: "sin confirmar" }, unverified: "sin verificar aún",
     flag: "⚑ marcado para revisión", flags: "Marcas del verificador (s6)", download: "Descargar ReqIF", locks: "Comprobar los tres candados", again: "Otra auditoría",
     locks_ok: "✓ roundtrip_diff: el fichero de entrada sigue intacto fuera de los tres campos", locks_bad: "✗ roundtrip_diff ha encontrado cambios",
@@ -38,7 +39,8 @@ const T = {
     demo_note: (d) => `Replay at ×${d.speed} of a real run: ${d.engine}, ${d.recorded}, ${d.machine}. Verdicts and quotes as recorded.`,
     demo_input: (d) => [`${d.reqif} · ${d.total} requirements`, d.supplier_docs],
     evidence: "Evidence verified by code", why: "Model analysis", none: "No verified evidence: code degraded the verdict to the open value.",
-    match: "match", page: "p.", noimg: "The page cannot be shown: the supplier PDF is not on this machine.",
+    match: "match", page: "p.", literal: "verbatim in the manual",
+    approx: "approximate: above, the manual's text", paraphrase: "The model wrote:", noimg: "The page cannot be shown: the supplier PDF is not on this machine.",
     expected: "Ground truth", hit: "hit", miss: "miss", roles: { yes: "compliant", no: "not compliant", open: "unconfirmed" }, unverified: "not verified yet",
     flag: "⚑ flagged for review", flags: "Verifier flags (s6)", download: "Download ReqIF", locks: "Check the three locks", again: "Another audit",
     locks_ok: "✓ roundtrip_diff: the input file is intact outside the three fields", locks_bad: "✗ roundtrip_diff found changes",
@@ -191,7 +193,9 @@ function detail(r) {
   const ev = r.evidence.map((e) => {
     const src = `/api/jobs/${JOB.id}/page?doc=${encodeURIComponent(e.doc)}&page=${e.page}&q=${encodeURIComponent(e.quote || "")}`;
     return `<div class="ev"><div class="cite">[${esc(e.doc)} ${t("page")}${e.page} ${esc(e.section || "")}]</div>
-      <q>${esc(e.quote)}</q><div class="meta">${t("match")} ${Number(e.match_ratio ?? 0).toFixed(2)} · chunk ${esc(e.chunk_id)}</div>
+      <q>${esc(e.quote)}</q>
+      ${e.quote_modelo ? `<div class="modelo"><b>${t("paraphrase")}</b> «${esc(e.quote_modelo)}»</div>` : ""}
+      <div class="meta">${e.literal === false ? t("approx") : t("literal")} · ${t("match")} ${Number(e.match_ratio ?? 0).toFixed(2)} · chunk ${esc(e.chunk_id)}</div>
       <img alt="${esc(e.doc)} ${t("page")}${e.page}" src="${src}" onerror="this.outerHTML='<div class=noimg>${t("noimg")}</div>'"></div>`;
   }).join("") || `<p class="muted">${t("none")}</p>`;
   // el razonamiento del modelo sin el bloque de citas, que ya se pinta verificado debajo

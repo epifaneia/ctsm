@@ -34,8 +34,8 @@ A customer specification has dozens of requirements; the supplier manual that an
 | 1 · Cleaning | `s0` adds the three target fields to the ReqIF if the export lacks them (schema only, deterministic ids). `s1` parses ids, hierarchy, target fields and the status enum of the file itself. `s2` turns the supplier PDFs into chunks with section, page and a per-offset `page_map` (PyMuPDF; encrypted PDFs decrypted in memory). | |
 | 2 · Context | `s3` retrieves BM25 top-K chunks per requirement, or passes the whole corpus through when it fits. Every chunk carries an id, a page and a section: the model will be able to point, never to describe. `utils/citables` splits each chunk into numbered units so a quote can be chosen by index. | ★ |
 | 3 · Input guardrail | `s4` calls with a forced response schema: `status` restricted to the enum the file declares, `chunk_id` restricted, per requirement, to the candidates of that requirement. Citing a location that was not given is structurally impossible. | |
-| 4 · Process | One call per requirement, no batches. Backend `ollama` (local, default) or `gemini` (cloud), same contract. In v2 mode there is no call at all: `s4_evidence` locates and trims the literal passages, and `s5_review` asks a small model, per passage, "supports, contradicts, irrelevant?". | |
-| 5 · Output guardrail | `s6` checks every quote verbatim against the cited chunk (rapidfuzz ≥ 0.85), derives the exact page from the match offset, and degrades any verdict left without verified evidence to the open value, with a flag. In v2, one contradicting passage is enough for a "no". `s7` edits the original with lxml and `roundtrip_diff` proves nothing else changed: three locks, five sabotages, five caught. | ★ |
+| 4 · Process | One call per requirement, no batches. Backend `ollama` (local, default) or `gemini` (cloud), same contract. Three modes (`run.py --modo`): **veredicto** (default), `s4` decides the status and quotes; **revision**, then `s5_review` judges every candidate passage (supports, contradicts, irrelevant) with a small model, and the large one arbitrates where they disagree; **evidencia**, no model call at all: `s4_evidence` anchors the passages to their pages and leaves the status open for the engineer. | |
+| 5 · Output guardrail | `s6` looks for every quote **literally** in the chunk the model cited, after normalising the PDF's noise (hyphenation, line breaks, typographic quotes), and derives the exact page from the match offset. A quote that is only close (similarity ≥ 0.85) is kept, but replaced by the manual's own passage and flagged: what the file shows is always the manual's text, never the model's. A verdict left without verified evidence degrades to the open value, with a flag. In revision mode, one contradicting passage is enough for a "no". `s7` edits the original with lxml and `roundtrip_diff` proves nothing else changed: `tests/test_roundtrip.py` throws ten sabotages at it and it catches all ten. | ★ |
 
 ### What it writes, and where
 
@@ -59,7 +59,9 @@ Measured on 2026-10-27, n = 9: a small set, read it as a smoke test, not a bench
 
 Two things follow from that table. The local model removes the data leaving the machine, and the bounded task is what makes a 14B enough. What a model misses, the guardrail flags instead of letting through: the 7B miss is a *Not compliant* where the expected answer was *Unconfirmed*, flagged by `s6` because one of its two quotes did not verify; neither model produced a false *Compliant*.
 
-`tools/score_vs_fixture.py` reproduces the table. Calibrate Ollama threads with the **longest** prompt of the set, not the shortest: a sweep on the short prompt suggested forcing 32 GPU layers for an apparent +59 %; on the long prompt that same setting was worse than Ollama's autofit.
+What the literal check catches, on this very run. For REQ-STM-001 the 14B quoted *"The **4 to 16 MHz** external oscillator has the advantage of producing a very accurate rate on the main clock"*; the passage it pointed to says ***3 to 25 MHz***. A similarity threshold alone accepts it (0.96). `s6` keeps the manual's sentence, puts the model's version aside and flags the requirement. Of the 14 quotes in the run, 11 are literal and 3 are paraphrases, all shown with the manual's text. The verdicts do not change: 9/9.
+
+`tools/score_vs_fixture.py` reproduces the table. Calibrate Ollama threads with the **longest** prompt of the set, not the shortest: a short prompt makes a setting look faster than it is on real requirements.
 
 Beyond the public set, the pipeline has been run on a real customer specification (53 requirements) and its supplier manuals. That data is not in this repository; the screenshots below are from the public set.
 
@@ -121,19 +123,19 @@ This repository ships no data: no inputs, no intermediates, no outputs. `data/` 
 
 ## Security & regulation
 
-Same four headings in every repository. Rows marked **today** are what the code does. Rows marked **wire** are the three integration wires the repository ships as a contract (identity, events, sign-off) and the company connects to its own systems: see [docs/INTEGRATION.md](docs/INTEGRATION.md). Local tests: `python tests/test_custodia.py`.
+Same four headings in every repository. Rows marked **today** are what the code does. Rows marked **wire** are the three integration wires the repository ships as a contract (identity, events, sign-off) and the company connects to its own systems: see [docs/INTEGRATION.md](docs/INTEGRATION.md). Local tests, no network and no model: `python tests/todas.py` (the custody wires, literal quotes, the ten round-trip sabotages).
 
 | | | |
 |---|---|---|
-| **Confidentiality** | Local by default: Ollama on `127.0.0.1`, a 14B model, no byte leaves the machine, the whole pipeline runs with the network unplugged. The task is bounded enough for that model to be enough (8/9, 0 false "compliant"). The cloud backend is for non-confidential data and comparison only: when on, `s4` prints on every run that it sends the requirement text and up to 10 chunks of the supplier manual (~28,000 characters) to Google. Encrypted PDFs are decrypted in memory; no cleartext copy is written. `data/` and `.env` are outside git. | **today** |
-| **Traceability** | Every verdict carries its evidence with document, page, section and match ratio; the citation is composed by code, never by the model. `logs/` keeps per-run traces with chunk ids, scores and flags, never the requirement text or the prompt. | **today** |
+| **Confidentiality** | Local by default: Ollama on `127.0.0.1` (qwen2.5:7b by default; the measured run used the 14B), no byte leaves the machine, the whole pipeline runs with the network unplugged. The task is bounded enough for a local model to be enough (9/9 with the 14B, 0 false "compliant"). The cloud backend is for non-confidential data and comparison only: when on, `s4` prints on every run that it sends the requirement text and up to 10 chunks of the supplier manual (~28,000 characters) to Google. Encrypted PDFs are decrypted in memory; no cleartext copy is written. `data/` and `.env` are outside git. | **today** |
+| **Traceability** | Every verdict carries its evidence with document, page, section and match ratio; the citation is composed by code, never by the model. `results.json` keeps, per requirement, every verified quote with its page, whether it is literal or approximate (with the model's version aside), and every flag of the verifier. | **today** |
 | | **Wire 2 · events.** Every model call goes through `custodia/ledger`: one JSON line with actor, step, engine, endpoint, whether data left the machine, input size and hash. Never the text. `logs/custody.jsonl` or stdout. The company points its SIEM at it. | **wire** |
 | **Leak prevention** | The model holds no credentials; the step that invokes it holds the endpoint and sees only the chunks selected for that requirement. Everything else is code with no network access. | **today** |
 | | **Wire 1 · identity.** `run.py` refuses to start without a named actor (`custodia/identity`, default `CUSTODIA_ACTOR`); the actor is stamped on every event and every signature. The company replaces the provider with Entra ID, LDAP, Kerberos or its SSO in one call. Per-layer permissions on inputs, intermediates, model and outputs are the company's, on its file system and its vault. | **wire** |
-| **Human in the loop** | Any requirement without verified evidence stays at the open value with a flag; the reviewer looks at what is flagged, not at everything. In v2 mode the system never rules: it locates evidence and the engineer decides. | **today** |
+| **Human in the loop** | Any requirement without verified evidence stays at the open value with a flag; the reviewer looks at what is flagged, not at everything. In evidencia mode the system never rules: it anchors the evidence to its page and the engineer decides. | **today** |
 | | **Wire 3 · sign-off.** An output is a proposal until `tools/signoff.py sign` writes its manifest (file hash, actor, timestamp, signature) and `verify` passes; a changed file or a wrong key fails. Nothing the model touched is imported or sent without a manifest that verifies. The company replaces the local HMAC key with its PKI or its Polarion approval workflow by registering two functions. | **wire** |
 
-Framework: EU AI Act (2024/1689) · GDPR · ISO/IEC 42001 · ISO/IEC 27001 · TISAX.
+Written with reference to the EU AI Act (2024/1689), GDPR, ISO/IEC 42001, ISO/IEC 27001 and TISAX. No certification or conformity is claimed: the table says which part the code covers and which part belongs to the company.
 
 ---
 
@@ -146,6 +148,7 @@ clients/     ollama (local, default) · gemini (cloud) · docling_adapter
 prompts/     evaluar_status.txt (taxonomy injected at runtime)
 tools/       roundtrip_diff · reqif_lint · score_vs_fixture · build_demo_stk · signoff
 utils/       citables · text_norm · json_helpers
+tests/       todas · custodia · s6 (literal quotes) · roundtrip (ten sabotages)
 custodia/    identity · ledger · signoff · cli  — the three integration wires
 data/        inputs · interim · outputs — all outside git
 ```

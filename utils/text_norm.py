@@ -92,10 +92,11 @@ def normalize(text: str) -> tuple[str, list[int]]:
     return "".join(out), idx
 
 
-def find_literal(quote: str, texto: str) -> int | None:
-    """Posición en `texto` (offset ORIGINAL) donde empieza `quote`, o None.
+def find_literal_span(quote: str, texto: str) -> tuple[int, int] | None:
+    """(inicio, fin) en `texto` (offsets ORIGINALES) del tramo que es `quote`, o None.
 
     Literal estricto tras normalizar: no hay umbral que ajustar. O está, o no.
+    `texto[inicio:fin]` es el texto del documento tal cual, con sus saltos de línea.
     """
     q, _ = normalize(quote)
     t, mapa = normalize(texto)
@@ -104,7 +105,13 @@ def find_literal(quote: str, texto: str) -> int | None:
     pos = t.find(q)
     if pos < 0:
         return None
-    return mapa[pos] if pos < len(mapa) else None
+    return mapa[pos], mapa[pos + len(q) - 1] + 1
+
+
+def find_literal(quote: str, texto: str) -> int | None:
+    """Posición en `texto` (offset ORIGINAL) donde empieza `quote`, o None."""
+    span = find_literal_span(quote, texto)
+    return span[0] if span else None
 
 
 def is_literal(quote: str, texto: str) -> bool:

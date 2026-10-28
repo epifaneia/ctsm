@@ -171,7 +171,7 @@ REVIEW_MODEL   = os.environ.get("CTSM_REVIEW_MODEL", "qwen2.5:7b")
 REVIEW_WORKERS = int(os.environ.get("CTSM_REVIEW_WORKERS", "2"))
 
 # --- Verificación (s6) ---
-QUOTE_MIN_RATIO     = float(os.environ.get("CTSM_QUOTE_MIN_RATIO", "0.85"))  # fuzzy match quote↔corpus
+QUOTE_MIN_RATIO     = float(os.environ.get("CTSM_QUOTE_MIN_RATIO", "0.85"))  # s6: parecido mínimo de una cita NO literal (se guarda el texto del manual y se marca)
 JUDGE_ENABLED       = os.environ.get("CTSM_JUDGE", "0") in ("1", "true", "True")
 
 # --- Orquestación (run.py) ---

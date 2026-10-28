@@ -86,6 +86,8 @@ button.ghost{background:transparent;border:1px solid var(--linea);border-radius:
 .ev .cite{font:600 12.5px var(--mono);color:var(--pet)}
 .ev q{display:block;margin:6px 0;font-style:italic}
 .ev .meta{font:12px var(--mono);color:var(--suave)}
+.ev .modelo{font-size:13px;color:var(--rojo);background:var(--rojo-bg);border-radius:6px;padding:6px 8px;margin:4px 0 6px}
+.ev .modelo b{font-weight:600}
 .ev img{display:block;width:100%;margin-top:10px;border:1px solid var(--linea);border-radius:6px;background:#fff}
 .ev .noimg{font-size:12.5px;color:var(--suave);margin-top:8px}
 .gt{font:12.5px var(--mono);color:var(--suave)}

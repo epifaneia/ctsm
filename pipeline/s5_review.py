@@ -26,9 +26,9 @@ todo requisito cuyo veredicto agregado DIFIERA del de s4 se reevalúa con el
 modelo grande, y su palabra es la definitiva.
 
 Entrada:  stk_json + evidence (s3) + corpus (s2) + eval (s4)
-Salida:   config.REVIEW_DIR/<stem>.json   (s6 lo prefiere al eval crudo)
+Salida:   config.REVIEW_DIR/<stem>.json   (s6 lo sella en modo revision)
 
-Uso:  python pipeline/s5_review.py [substring] [--solo-desacuerdos]
+Uso:  python run.py [substring] --modo revision      (o a mano: python pipeline/s5_review.py [substring])
 """
 from __future__ import annotations
 

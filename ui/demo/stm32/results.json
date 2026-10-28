@@ -11,7 +11,7 @@
       "spec_object_id": "REQ-STM-001",
       "oem_req_id": null,
       "status": "Unconfirmed",
-      "rationale": "The documentation specifies that the HSE crystal can operate at frequencies between 4-16 MHz or 3-25 MHz, but does not explicitly mention a precisely tuned 12.000 MHz quartz crystal oscillator.\n\nEvidence:\n[RM0008 p.128 §8.2.1 HSE clock] \"The 4 to 16 MHz external oscillator has the advantage of producing a very accurate rate on the main clock.\"\n[RM0008 p.133 §0 HSICAL[7:0]] \"external 3-25 MHz oscillator not bypassed\"",
+      "rationale": "The documentation specifies that the HSE crystal can operate at frequencies between 4-16 MHz or 3-25 MHz, but does not explicitly mention a precisely tuned 12.000 MHz quartz crystal oscillator.\n\nEvidence:\n[RM0008 p.128 §8.2.1 HSE clock] \"The 3 to 25 MHz external oscillator has the advantage of producing a very accurate rate on the main clock.\"\n[RM0008 p.133 §0 HSICAL[7:0]] \"external 3-25 MHz oscillator not bypassed\"",
       "comments": "The requirement specifies a precise frequency of 12.000 MHz, but the documentation only mentions ranges for HSE crystal operation (4-16 MHz or 3-25 MHz). Clarification is needed to confirm if this specific frequency is supported.",
       "evidence": [
         {
@@ -19,8 +19,10 @@
           "doc": "RM0008",
           "section": "§8.2.1 HSE clock",
           "page": 128,
-          "quote": "The 4 to 16 MHz external oscillator has the advantage of producing a very accurate rate on the main clock.",
-          "match_ratio": 0.962
+          "quote": "The 3 to 25 MHz external oscillator has the advantage of producing a very accurate rate on the main clock.",
+          "match_ratio": 0.962,
+          "literal": false,
+          "quote_modelo": "The 4 to 16 MHz external oscillator has the advantage of producing a very accurate rate on the main clock."
         },
         {
           "chunk_id": "RM0008-C0210",
@@ -28,16 +30,19 @@
           "section": "§0 HSICAL[7:0]",
           "page": 133,
           "quote": "external 3-25 MHz oscillator not bypassed",
-          "match_ratio": 1.0
+          "match_ratio": 1.0,
+          "literal": true
         }
       ],
-      "flags": []
+      "flags": [
+        "cita_aproximada:RM0008-C0197 (0.96): se muestra el texto del manual"
+      ]
     },
     {
       "spec_object_id": "REQ-STM-002",
       "oem_req_id": null,
       "status": "Compliant",
-      "rationale": "The documentation explicitly states that the CRC calculation unit computes a CRC code from a 32-bit data word, which aligns with the requirement for calculating a software signature during runtime using a 32-bit data word.\n\nEvidence:\n[RM0008 p.63 §4.1 CRC introduction] \"The CRC calculation unit is used to get a CRC code from a 32-bit data word and a fixed generator polynomial.\"\n[RM0008 p.64 §4.3 CRC functional description] \"Each write operation into the data register creates a combination of the previous CRC value and the new one (CRC computation is done on the whole 32-bit data word, and not byte per byte).\"\n[RM0008 p.64 §4.4 CRC registers] \"The CRC calculation unit contains two data registers and a control register. The peripheral The CRC registers have to be accessed by words (32 bits).\"",
+      "rationale": "The documentation explicitly states that the CRC calculation unit computes a CRC code from a 32-bit data word, which aligns with the requirement for calculating a software signature during runtime using a 32-bit data word.\n\nEvidence:\n[RM0008 p.63 §4.1 CRC introduction] \"The CRC (cyclic redundancy check) calculation unit is used to get a CRC code from a 32-bit data word and a fixed generator polynomial.\"\n[RM0008 p.64 §4.3 CRC functional description] \"Each write operation into the data register creates a combination of the previous CRC value and the new one (CRC computation is done on the whole 32-bit data word, and not byte per byte).\"\n[RM0008 p.64 §4.4 CRC registers] \"The CRC calculation unit contains two data registers and a control register.The peripheral The CRC registers have to be accessed by words (32 bits).\"",
       "comments": "The system includes a CRC calculation unit that computes a software signature during runtime using a 32-bit data word, as required.",
       "evidence": [
         {
@@ -45,8 +50,10 @@
           "doc": "RM0008",
           "section": "§4.1 CRC introduction",
           "page": 63,
-          "quote": "The CRC calculation unit is used to get a CRC code from a 32-bit data word and a fixed generator polynomial.",
-          "match_ratio": 0.944
+          "quote": "The CRC (cyclic redundancy check) calculation unit is used to get a CRC code from a 32-bit data word and a fixed generator polynomial.",
+          "match_ratio": 0.944,
+          "literal": false,
+          "quote_modelo": "The CRC calculation unit is used to get a CRC code from a 32-bit data word and a fixed generator polynomial."
         },
         {
           "chunk_id": "RM0008-C0092",
@@ -54,18 +61,24 @@
           "section": "§4.3 CRC functional description",
           "page": 64,
           "quote": "Each write operation into the data register creates a combination of the previous CRC value and the new one (CRC computation is done on the whole 32-bit data word, and not byte per byte).",
-          "match_ratio": 0.989
+          "match_ratio": 1.0,
+          "literal": true
         },
         {
           "chunk_id": "RM0008-C0093",
           "doc": "RM0008",
           "section": "§4.4 CRC registers",
           "page": 64,
-          "quote": "The CRC calculation unit contains two data registers and a control register. The peripheral The CRC registers have to be accessed by words (32 bits).",
-          "match_ratio": 0.986
+          "quote": "The CRC calculation unit contains two data registers and a control register.The peripheral The CRC registers have to be accessed by words (32 bits).",
+          "match_ratio": 0.986,
+          "literal": false,
+          "quote_modelo": "The CRC calculation unit contains two data registers and a control register. The peripheral The CRC registers have to be accessed by words (32 bits)."
         }
       ],
-      "flags": []
+      "flags": [
+        "cita_aproximada:RM0008-C0090 (0.94): se muestra el texto del manual",
+        "cita_aproximada:RM0008-C0093 (0.99): se muestra el texto del manual"
+      ]
     },
     {
       "spec_object_id": "REQ-STM-003",
@@ -80,7 +93,8 @@
           "section": "§6.1 BKP introduction",
           "page": 81,
           "quote": "The backup registers are forty two 16-bit registers for storing 84 bytes of user application data.",
-          "match_ratio": 0.99
+          "match_ratio": 1.0,
+          "literal": true
         },
         {
           "chunk_id": "RM0008-C0124",
@@ -88,7 +102,8 @@
           "section": "§6.2 BKP main features",
           "page": 81,
           "quote": "84-byte data registers (in high-density, XL-density and connectivity line devices)",
-          "match_ratio": 0.988
+          "match_ratio": 1.0,
+          "literal": true
         }
       ],
       "flags": []
@@ -106,7 +121,8 @@
           "section": "§5.1 Power supplies",
           "page": 67,
           "quote": "The device requires a 2.0-to-3.6 V operating voltage supply (VDD).",
-          "match_ratio": 1.0
+          "match_ratio": 1.0,
+          "literal": true
         }
       ],
       "flags": []
@@ -133,7 +149,8 @@
           "section": "§28.1 OTG_FS introduction",
           "page": 828,
           "quote": "in device mode, it only supports full-speed (FS, 12 Mbits/s) transfers.",
-          "match_ratio": 0.986
+          "match_ratio": 1.0,
+          "literal": true
         }
       ],
       "flags": []
@@ -151,7 +168,8 @@
           "section": "§29.5 Ethernet functional description: MAC 802.3",
           "page": 979,
           "quote": "The MAC block implements the LAN CSMA/CD sublayer for the following families of systems: 10 Mbit/s and 100 Mbit/s of data rates for baseband and broadband systems.",
-          "match_ratio": 0.994
+          "match_ratio": 1.0,
+          "literal": true
         },
         {
           "chunk_id": "RM0008-C1487",
@@ -159,7 +177,8 @@
           "section": "§25 MHz",
           "page": 978,
           "quote": "It supports 10-Mbit/s and 100-Mbit/s operating rates",
-          "match_ratio": 1.0
+          "match_ratio": 1.0,
+          "literal": true
         }
       ],
       "flags": []
@@ -177,7 +196,8 @@
           "section": "§5.1.2 Battery backup domain",
           "page": 69,
           "quote": "To retain the content of the Backup registers and supply the RTC function when VDD is turned off, VBAT pin can be connected to an optional standby voltage supplied by a battery or by another source.",
-          "match_ratio": 0.99
+          "match_ratio": 1.0,
+          "literal": true
         },
         {
           "chunk_id": "RM0008-C0123",
@@ -185,7 +205,8 @@
           "section": "§6.1 BKP introduction",
           "page": 81,
           "quote": "The backup registers are forty two 16-bit registers for storing 84 bytes of user application data. They are implemented in the backup domain that remains powered on by VBAT when the VDD power is switched off.",
-          "match_ratio": 0.986
+          "match_ratio": 1.0,
+          "literal": true
         }
       ],
       "flags": []
@@ -203,7 +224,8 @@
           "section": "§25.4 I2S functional description",
           "page": 723,
           "quote": "The I2S audio protocol is not available in low- and medium-density devices.",
-          "match_ratio": 1.0
+          "match_ratio": 1.0,
+          "literal": true
         }
       ],
       "flags": []

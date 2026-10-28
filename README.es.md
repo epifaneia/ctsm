@@ -34,8 +34,8 @@ Una especificación de cliente tiene decenas de requisitos; el manual del provee
 | 1 · Limpieza | `s0` añade al ReqIF los tres campos objetivo si el export no los trae (solo esquema, ids deterministas). `s1` parsea ids, jerarquía, campos objetivo y el enum de estado del propio fichero. `s2` convierte los PDF del proveedor en chunks con sección, página y `page_map` por offset (PyMuPDF; PDFs cifrados descifrados en memoria). | |
 | 2 · Contexto | `s3` recupera BM25 top-K chunks por requisito, o pasa el corpus entero cuando cabe. Cada chunk lleva id, página y sección: el modelo podrá señalar, nunca describir. `utils/citables` trocea cada chunk en unidades numeradas para que una cita se elija por índice. | ★ |
 | 3 · Guardarraíl de entrada | `s4` llama con un schema de respuesta forzado: `status` restringido al enum que declara el fichero, `chunk_id` restringido, por requisito, a los candidatos de ese requisito. Citar una ubicación no dada es estructuralmente imposible. | |
-| 4 · Proceso | Una llamada por requisito, sin lotes. Backend `ollama` (local, por defecto) o `gemini` (nube), mismo contrato. En modo v2 no hay llamada: `s4_evidence` localiza y recorta los pasajes literales, y `s5_review` pregunta a un modelo pequeño, por pasaje, "¿apoya, contradice, irrelevante?". | |
-| 5 · Guardarraíl de salida | `s6` comprueba cada quote verbatim contra el chunk citado (rapidfuzz ≥ 0,85), deriva la página exacta del offset del match, y degrada al valor abierto, con flag, cualquier veredicto que se quede sin evidencia verificada. En v2, un solo pasaje que contradiga basta para un "no". `s7` edita el original con lxml y `roundtrip_diff` demuestra que nada más cambió: tres candados, cinco sabotajes, cinco detectados. | ★ |
+| 4 · Proceso | Una llamada por requisito, sin lotes. Backend `ollama` (local, por defecto) o `gemini` (nube), mismo contrato. Tres modos (`run.py --modo`): **veredicto** (por defecto), `s4` decide el estado y cita; **revision**, después `s5_review` juzga cada pasaje candidato (apoya, contradice, irrelevante) con un modelo pequeño, y el grande arbitra donde discrepan; **evidencia**, sin ninguna llamada a modelo: `s4_evidence` ancla los pasajes a su página y deja el estado abierto para que decida el ingeniero. | |
+| 5 · Guardarraíl de salida | `s6` busca cada cita **literal** en el chunk que el modelo señaló, tras normalizar el ruido del PDF (guiones de partición, saltos de línea, comillas tipográficas), y deriva la página exacta del offset del match. Una cita que solo se parece (similitud ≥ 0,85) se acepta, pero se sustituye por el pasaje del propio manual y se marca: lo que enseña el fichero es siempre texto del manual, nunca del modelo. Un veredicto que se queda sin evidencia verificada se degrada al valor abierto, con flag. En modo revision, un solo pasaje que contradiga basta para un "no". `s7` edita el original con lxml y `roundtrip_diff` demuestra que nada más cambió: `tests/test_roundtrip.py` le lanza diez sabotajes y detecta los diez. | ★ |
 
 ### Qué escribe, y dónde
 
@@ -59,7 +59,9 @@ Medido el 27-10-2026, n = 9: un set pequeño, léelo como prueba de humo, no com
 
 De esa tabla salen dos cosas. El modelo local elimina la salida del dato, y la tarea acotada es lo que hace que un 14B baste. Lo que un modelo falla, el guardarraíl lo marca en vez de colarlo: el fallo del 7B es un *Not compliant* donde se esperaba *Unconfirmed*, marcado por `s6` porque una de sus dos citas no verificó; ningún modelo dio un falso *Compliant*.
 
-`tools/score_vs_fixture.py` reproduce la tabla. Calibra los hilos de Ollama con el prompt **más largo** del set, no con el más corto: un barrido con el prompt corto sugería forzar 32 capas en GPU con un +59 % aparente; con el prompt largo ese mismo ajuste era peor que el autofit de Ollama.
+Lo que caza la comprobación literal, en esta misma ejecución. En REQ-STM-001 el 14B citó *"The **4 to 16 MHz** external oscillator has the advantage of producing a very accurate rate on the main clock"*; el pasaje que señaló dice ***3 to 25 MHz***. Un umbral de similitud solo lo da por bueno (0,96). `s6` guarda la frase del manual, aparta la versión del modelo y marca el requisito. De las 14 citas de la ejecución, 11 son literales y 3 son paráfrasis, todas mostradas con el texto del manual. Los veredictos no cambian: 9/9.
+
+`tools/score_vs_fixture.py` reproduce la tabla. Calibra los hilos de Ollama con el prompt **más largo** del set, no con el más corto: con un prompt corto un ajuste parece más rápido de lo que es con requisitos reales.
 
 Además del set público, el pipeline se ha corrido sobre una especificación real de cliente (53 requisitos) y los manuales de su proveedor. Esos datos no están en este repositorio; las capturas de abajo son del set público.
 
@@ -121,19 +123,19 @@ Este repositorio no lleva datos: ni entradas, ni intermedios, ni salidas. `data/
 
 ## Seguridad y regulación
 
-Los mismos cuatro epígrafes en todos los repositorios. Las filas **hoy** son lo que hace el código. Las filas **cable** son los tres cables de integración que el repositorio trae como contrato (identidad, eventos, firma) y la empresa conecta a sus sistemas: ver [docs/INTEGRATION.es.md](docs/INTEGRATION.es.md). Pruebas locales: `python tests/test_custodia.py`.
+Los mismos cuatro epígrafes en todos los repositorios. Las filas **hoy** son lo que hace el código. Las filas **cable** son los tres cables de integración que el repositorio trae como contrato (identidad, eventos, firma) y la empresa conecta a sus sistemas: ver [docs/INTEGRATION.es.md](docs/INTEGRATION.es.md). Pruebas locales, sin red ni modelo: `python tests/todas.py` (los cables de custodia, las citas literales y los diez sabotajes de ida y vuelta).
 
 | | | |
 |---|---|---|
-| **Confidencialidad** | Local por defecto: Ollama en `127.0.0.1`, un modelo de 14B, ningún byte sale de la máquina, el pipeline completo funciona con la red desenchufada. La tarea está lo bastante acotada para que ese modelo baste (8/9, 0 falsos "cumple"). El backend de nube es solo para dato no confidencial y comparación: cuando está activo, `s4` imprime en cada ejecución que envía el texto del requisito y hasta 10 chunks del manual (~28.000 caracteres) a Google. Los PDF cifrados se descifran en memoria; no se escribe copia en claro. `data/` y `.env` fuera de git. | **hoy** |
-| **Trazabilidad** | Cada veredicto lleva su evidencia con documento, página, sección y ratio de match; la cita la compone el código, nunca el modelo. `logs/` guarda trazas por ejecución con ids de chunk, puntuaciones y flags, nunca el texto del requisito ni el prompt. | **hoy** |
+| **Confidencialidad** | Local por defecto: Ollama en `127.0.0.1` (qwen2.5:7b por defecto; la ejecución medida usó el 14B), ningún byte sale de la máquina, el pipeline completo funciona con la red desenchufada. La tarea está lo bastante acotada para que un modelo local baste (9/9 con el 14B, 0 falsos "cumple"). El backend de nube es solo para dato no confidencial y comparación: cuando está activo, `s4` imprime en cada ejecución que envía el texto del requisito y hasta 10 chunks del manual (~28.000 caracteres) a Google. Los PDF cifrados se descifran en memoria; no se escribe copia en claro. `data/` y `.env` fuera de git. | **hoy** |
+| **Trazabilidad** | Cada veredicto lleva su evidencia con documento, página, sección y ratio de match; la cita la compone el código, nunca el modelo. `results.json` guarda, por requisito, cada cita verificada con su página, si es literal o aproximada (con la versión del modelo aparte) y cada marca del verificador. | **hoy** |
 | | **Cable 2 · eventos.** Toda llamada al modelo pasa por `custodia/ledger`: una línea JSON con actor, paso, motor, endpoint, si el dato salió, tamaño y hash. Nunca el texto. `logs/custody.jsonl` o stdout. La empresa apunta su SIEM ahí. | **cable** |
 | **Prevención de fugas** | El modelo no tiene credenciales; el paso que lo invoca tiene el endpoint y solo ve los chunks seleccionados para ese requisito. Todo lo demás es código sin acceso a red. | **hoy** |
 | | **Cable 1 · identidad.** `run.py` se niega a arrancar sin un actor con nombre (`custodia/identity`, por defecto `CUSTODIA_ACTOR`); el actor se estampa en cada evento y cada firma. La empresa sustituye el proveedor por Entra ID, LDAP, Kerberos o su SSO en una llamada. Los permisos por capa sobre entradas, intermedios, modelo y salidas son los de la empresa, en su sistema de ficheros y su vault. | **cable** |
-| **Humano en el bucle** | Todo requisito sin evidencia verificada se queda en el valor abierto con un flag; el revisor mira lo marcado, no todo. En modo v2 el sistema nunca dictamina: localiza evidencia y decide el ingeniero. | **hoy** |
+| **Humano en el bucle** | Todo requisito sin evidencia verificada se queda en el valor abierto con un flag; el revisor mira lo marcado, no todo. En modo evidencia el sistema nunca dictamina: ancla la evidencia a su página y decide el ingeniero. | **hoy** |
 | | **Cable 3 · firma.** Una salida es una propuesta hasta que `tools/signoff.py sign` escribe su manifiesto (hash del fichero, actor, fecha, firma) y `verify` pasa; un fichero cambiado o una clave distinta fallan. Nada que haya tocado el modelo se importa ni se envía sin un manifiesto que verifique. La empresa sustituye la clave HMAC local por su PKI o por el flujo de aprobación de Polarion registrando dos funciones. | **cable** |
 
-Marco: EU AI Act (2024/1689) · RGPD · ISO/IEC 42001 · ISO/IEC 27001 · TISAX.
+Escrito con referencia al EU AI Act (2024/1689), el RGPD, ISO/IEC 42001, ISO/IEC 27001 y TISAX. No se declara ninguna certificación ni conformidad: la tabla dice qué parte cubre el código y qué parte es de la empresa.
 
 ---
 
@@ -146,6 +148,7 @@ clients/     ollama (local, por defecto) · gemini (nube) · docling_adapter
 prompts/     evaluar_status.txt (taxonomía inyectada en runtime)
 tools/       roundtrip_diff · reqif_lint · score_vs_fixture · build_demo_stk · signoff
 utils/       citables · text_norm · json_helpers
+tests/       todas · custodia · s6 (citas literales) · roundtrip (diez sabotajes)
 custodia/    identity · ledger · signoff · cli  — los tres cables de integración
 data/        inputs · interim · outputs — todo fuera de git
 ```
