@@ -8,10 +8,11 @@ Comprobaciones por requisito antes de sellar results.json:
        · literal tras normalizar el ruido tipográfico del PDF (utils/text_norm):
          sin umbral, o está o no está;
        · si no es literal pero se parece (rapidfuzz partial_ratio ≥
-         config.QUOTE_MIN_RATIO), el modelo parafraseó: se acepta, pero la cita
-         pasa a ser el TEXTO DEL MANUAL con el que casó, y se marca
-         «cita_aproximada». Si el modelo cambió una cifra, el revisor ve la del
-         manual, no la del modelo;
+         config.QUOTE_MIN_RATIO), el modelo parafraseó. Solo se acepta si dice lo
+         MISMO: las mismas cifras y las mismas negaciones (un 96 % de parecido no
+         distingue «3 to 25 MHz» de «4 to 16 MHz»). Si pasa, la cita pasa a ser el
+         TEXTO DEL MANUAL con el que casó y se marca «cita_aproximada»; si no, se
+         descarta como evidencia y queda marcado por qué;
        · por debajo, se descarta.
      La cita guardada es SIEMPRE texto del documento, nunca del modelo.
      La PÁGINA exacta se deriva del offset del match dentro del chunk
@@ -20,7 +21,9 @@ Comprobaciones por requisito antes de sellar results.json:
      s5_review, que juzga cada pasaje: un solo «contradice» basta para el «no».
      Sus citas se verifican igual. Queda marcado qué cambió respecto a s4.
   3. Veredicto ≠ "open" exige ≥1 evidencia VERIFICADA; si no → degradado al
-     valor open de la taxonomía (Unconfirmed/In review) + flag "demoted".
+     valor open de la taxonomía (Unconfirmed/In review) + flag "demoted". Si
+     todas sus citas son aproximadas, se mantiene pero con la marca
+     "solo_citas_aproximadas", para que una persona lo mire antes de firmar.
   4. Cobertura: todo requisito evaluable sin veredicto → open + flag
      "sin_evaluar".
 
@@ -48,6 +51,21 @@ from rapidfuzz import fuzz
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import config  # noqa: E402
 from utils.text_norm import find_literal_span  # noqa: E402
+
+
+_CIFRA = re.compile(r"\d+")
+_NEGACION = re.compile(r"\b(?:no|not|never|cannot|neither|nor|none|without)\b|n't\b", re.IGNORECASE)
+
+
+def _mismo_sentido(quote: str, tramo: str) -> str | None:
+    """None si la paráfrasis conserva cifras y negaciones; si no, el motivo. Las cifras se
+    comparan como multiconjunto de números; las negaciones, por recuento. No entiende el
+    texto, pero caza los dos cambios que más daño hacen en una cita técnica."""
+    if sorted(_CIFRA.findall(quote)) != sorted(_CIFRA.findall(tramo)):
+        return f"cifras distintas: modelo {' '.join(_CIFRA.findall(quote))} / manual {' '.join(_CIFRA.findall(tramo))}"
+    if len(_NEGACION.findall(quote)) != len(_NEGACION.findall(tramo)):
+        return "negación distinta entre la cita del modelo y el manual"
+    return None
 
 
 def _a_frase(texto: str, quote: str, ini: int, fin: int, margen: int = 80) -> tuple[int, int]:
@@ -111,6 +129,9 @@ def _verify_evidence(ev: dict, chunk_by_id: dict) -> tuple[dict | None, str | No
         ratio = (aln.score if aln else 0.0) / 100.0
         if ratio < config.QUOTE_MIN_RATIO:
             return None, f"quote no encontrada en {ev['chunk_id']} (ratio {ratio:.2f})"
+        distinto = _mismo_sentido(quote, texto[aln.dest_start:aln.dest_end])
+        if distinto:
+            return None, f"paráfrasis que cambia el sentido en {ev['chunk_id']} ({ratio:.2f}): {distinto}"
         ini, fin = _a_frase(texto, quote, aln.dest_start, aln.dest_end)
         literal = False
     out = {
@@ -228,6 +249,8 @@ def main() -> int:
                 if status != open_name and not verified:
                     flags.append(f"demoted:{status}->{open_name}")
                     status = open_name
+                elif status != open_name and not any(v["literal"] for v in verified):
+                    flags.append("solo_citas_aproximadas: revisar antes de firmar")
             rationale = analysis
             if verified:
                 rationale += "\n\nEvidence:\n" + "\n".join(_citation(v) for v in verified)

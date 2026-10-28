@@ -1,4 +1,5 @@
-"""s6_verify: la cita que se guarda es siempre texto del manual. Sin red, sin modelo.
+"""s6_verify: la cita que se guarda es siempre texto del manual, y una paráfrasis solo vale
+si conserva cifras y negaciones. Sin red, sin modelo.
 
     python tests/test_s6.py
 """
@@ -37,11 +38,17 @@ check(ok and ok["page"] == 67 and "quote_modelo" not in ok, "página 67 y sin ra
 ok, _ = verificar("The real-time clock and backup registers can be powered from the VBAT voltage")
 check(ok and ok["literal"] and ok["page"] == 68, "la página sale del offset, no del chunk", ok and ok["page"])
 
-ok, _ = verificar("The device requires a 2.0-to-5.5 V operating voltage supply (VDD).")
-check(ok and not ok["literal"], "una cifra cambiada no es literal", ok)
-check(ok and "3.6 V" in ok["quote"] and "5.5" not in ok["quote"],
-      "y la cita guardada enseña la cifra del manual, no la del modelo", ok and ok["quote"])
-check(ok and ok["quote_modelo"].startswith("The device requires a 2.0-to-5.5"), "lo que escribió el modelo queda aparte")
+ok, why = verificar("The device requires a 2.0-to-5.5 V operating voltage supply (VDD).")
+check(ok is None and "cifras distintas" in why and "5 5" in why and "3 6" in why,
+      "una cifra cambiada no cuenta como evidencia, y queda dicho cuál", why)
+
+ok, why = verificar("The device does not require a 2.0-to-3.6 V operating voltage supply (VDD).")
+check(ok is None and "negación" in why, "una negación añadida tampoco, aunque se parezca", why)
+
+ok, _ = verificar("The device requires a 2.0-to-3.6 V operating voltage supply VDD.")
+check(ok and not ok["literal"], "una paráfrasis con las mismas cifras pasa como aproximada", ok)
+check(ok and "(VDD)" in ok["quote"], "y la cita guardada es el texto del manual, no el del modelo", ok and ok["quote"])
+check(ok and ok["quote_modelo"].endswith("supply VDD."), "lo que escribió el modelo queda aparte")
 
 ok, why = verificar("Flash memory supports 100 000 write cycles over the full temperature range.")
 check(ok is None and "no encontrada" in why, "algo que no está en el manual se descarta", why)
