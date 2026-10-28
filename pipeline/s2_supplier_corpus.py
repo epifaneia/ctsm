@@ -26,6 +26,7 @@ Uso:  python pipeline/s2_supplier_corpus.py [substring-ignorado]
 """
 from __future__ import annotations
 
+import bisect
 import hashlib
 import json
 import re
@@ -115,12 +116,44 @@ def _open_pdf(pdf: Path) -> "fitz.Document":
     )
 
 
-def _extract_pdf(pdf: Path) -> list[dict]:
+def _extract_pdf(pdf: Path) -> tuple[list[dict], list[list]]:
     doc = _open_pdf(pdf)
     pages = [{"page": i + 1, "lines": _clean_lines(p.get_text())}
              for i, p in enumerate(doc)]
+    toc = doc.get_toc(simple=True)          # [nivel, título, página]; [] si el PDF no trae índice
     doc.close()
-    return pages
+    return pages, toc
+
+
+_TOC_NUM = re.compile(r"^(\d{1,2}(?:\.\d{1,2}){0,3})\s+(\S.*)$")
+_norm = lambda t: re.sub(r"\s+", " ", t).strip().lower()
+
+
+def _toc_anchors(pages: list[dict], toc: list[list]) -> list[tuple[int, int, str]]:
+    """Dónde empieza cada sección numerada del índice del PDF: (página, línea, etiqueta).
+
+    El nombre de la sección sale del índice que trae el propio PDF, no de adivinar
+    cabeceras en el texto: en un manual de registros, un "0" suelto de un diagrama
+    de bits o un "25 MHz" parecen cabeceras. Las entradas sin número (tablas,
+    figuras, subapartados) no dan nombre: se queda la última sección numerada.
+    La línea se busca en la página; si no aparece, la sección empieza al principio.
+    """
+    lines_by_page = {pg["page"]: pg["lines"] for pg in pages}
+    anchors = []
+    for _, title, page in toc:
+        m = _TOC_NUM.match(title.strip())
+        if not m or page not in lines_by_page:
+            continue
+        num, name = m.group(1), m.group(2).strip()
+        lines = [_norm(ln) for ln in lines_by_page[page]]
+        at = 0
+        for i, ln in enumerate(lines):
+            if ln == _norm(title) or (ln == num and i + 1 < len(lines) and lines[i + 1].startswith(_norm(name)[:25])):
+                at = i
+                break
+        anchors.append((page, at, f"§{num} {name}"))
+    anchors.sort(key=lambda a: (a[0], a[1]))
+    return anchors
 
 
 # Final de frase de verdad: puntuación de cierre, y no un numeral suelto
@@ -134,11 +167,18 @@ def _cierra_frase(linea: str) -> bool:
     return bool(t) and not _SOLO_NUM.match(t) and bool(_FIN_FRASE.search(t))
 
 
-def _chunk_doc(short: str, pages: list[dict]) -> list[dict]:
+def _chunk_doc(short: str, pages: list[dict], anchors: list[tuple[int, int, str]] | None = None) -> list[dict]:
+    """Los cortes los marcan las cabeceras detectadas en el texto; el NOMBRE de la
+    sección, si el PDF trae índice, sale de `anchors` (ver _toc_anchors)."""
     chunks: list[dict] = []
     cur_section = ""
     cur_parts: list[tuple[int, str]] = []   # (página, línea)
+    cur_start = (0, 0)                      # (página, índice de línea) del primer trozo
     cur_len = 0
+
+    def section_at(pos: tuple[int, int]) -> str:
+        i = bisect.bisect_right([(a[0], a[1]) for a in anchors], pos) - 1
+        return anchors[i][2] if i >= 0 else ""
     tope = int(config.CHUNK_CHARS * config.CHUNK_MAX_FACTOR)
 
     def flush(por_longitud: bool = True) -> None:
@@ -173,7 +213,7 @@ def _chunk_doc(short: str, pages: list[dict]) -> list[dict]:
         chunks.append({
             "chunk_id": f"{short}-C{len(chunks):04d}",
             "doc": short,
-            "section": cur_section,
+            "section": section_at(cur_start) if anchors else cur_section,
             "page_start": cur_parts[0][0],
             "page_end": cur_parts[-1][0],
             "page_map": page_map,
@@ -204,6 +244,8 @@ def _chunk_doc(short: str, pages: list[dict]) -> list[dict]:
                 cur_section = heading
                 i += 1
                 continue
+            if not cur_parts:
+                cur_start = (pg["page"], i)
             cur_parts.append((pg["page"], line))
             cur_len += len(line) + 1
             # Pasado el objetivo se corta en el PRIMER final de frase; el tope
@@ -230,8 +272,8 @@ def main() -> int:
             continue
         seen.add(sha)
         short = _unique_short(_doc_short(pdf.name), {d["doc"] for d in docs_meta})
-        pages = _extract_pdf(pdf)
-        chunks = _chunk_doc(short, pages)
+        pages, toc = _extract_pdf(pdf)
+        chunks = _chunk_doc(short, pages, _toc_anchors(pages, toc))
         chars = sum(len(c["text"]) for c in chunks)
         docs_meta.append({"file": pdf.name, "doc": short, "sha256": sha,
                           "pages": len(pages), "chunks": len(chunks), "chars": chars})
