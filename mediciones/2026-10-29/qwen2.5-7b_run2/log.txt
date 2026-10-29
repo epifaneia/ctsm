@@ -1,0 +1,44 @@
+run: actor daniel
+== run: 1 STK(s), modo veredicto, 6 pasos + corpus, 1 doc(s) en paralelo ==
+  [OK ] s2_supplier_corpus   manuales del proveedor → corpus        (  2.5s)
+         | s2: RM0008 — 1136 págs → 1728 chunks, 2,179,302 chars
+         | s2: corpus → C:\Users\Daniel Martin\Desktop\Repositorios\marca personal\github\ctsm\data\interim\corpus\corpus.json  (1728 chunks totales)
+
+### STM32F10xxx_Validation.reqif  (stem: STM32F10xxx_Validation)
+  [OK ] s0_prepare_stk       campos objetivo en el ReqIF (esquema)  (  0.2s)
+         | s0: STM32F10xxx_Validation.reqif
+         |       + Status (ENUMERATION: Compliant, Not compliant, Unconfirmed)
+         |       + Rationale (XHTML)
+         |       + Comments from/to External (XHTML)
+         |     ✓ verificado: idéntico al original salvo el esquema añadido
+         | s0: 1 ReqIF preparado(s) → C:\Users\Daniel Martin\Desktop\Repositorios\marca personal\github\ctsm\data\interim\stk_prepared
+  [OK ] s1_parse_stk         STK ReqIF → stk.json                   (  0.2s)
+         | s1: fuente = stk_prepared
+         | s1: STM32F10xxx_Validation.reqif → STM32F10xxx_Validation.json  (10 objetos, 9 con campos objetivo, enum status: ['Compliant', 'Not compliant', 'Unconfirmed'])
+  [OK ] s3_retrieve          requisito → evidencia candidata        (  1.8s)
+         | s3: STM32F10xxx_Validation — 9 requisitos × BM25 top-10 → STM32F10xxx_Validation.json
+  [OK ] s4_evaluate          estado + citas (modelo)                (266.4s)
+         | s4: motor = ollama:qwen2.5:7b  ctx=16384  [AIR-GAP: nada sale de la máquina]
+         | s4: [1/9] REQ-STM-001 → Not compliant (2 evidencias, 57.8s)
+         | s4: [2/9] REQ-STM-002 → Compliant (1 evidencias, 25.9s)
+         | s4: [3/9] REQ-STM-003 → Not compliant (1 evidencias, 16.7s)
+         | s4: [4/9] REQ-STM-004 → Compliant (1 evidencias, 15.8s)
+         | s4: [5/9] REQ-STM-005 → Unconfirmed (2 evidencias, 41.1s)
+         | s4: [6/9] REQ-STM-006 → Not compliant (1 evidencias, 24.4s)
+         | s4: [7/9] REQ-STM-007 → Compliant (1 evidencias, 31.4s)
+         | s4: [8/9] REQ-STM-008 → Unconfirmed (1 evidencias, 21.5s)
+         | s4: [9/9] REQ-STM-009 → Not compliant (1 evidencias, 27.1s)
+         | s4: 9 veredictos → C:\Users\Daniel Martin\Desktop\Repositorios\marca personal\github\ctsm\data\interim\eval\STM32F10xxx_Validation.json
+  [OK ] s6_verify            guard anti-alucinación + sellado       (  0.2s)
+         | s6: STM32F10xxx_Validation — 9 sellados {'Not compliant': 4, 'Unconfirmed': 3, 'Compliant': 2}, 2 con flags → STM32F10xxx_Validation.json
+         |      ⚑ REQ-STM-001: quote_failed:paráfrasis que cambia el sentido en RM0008-C0197 (0.96): cifras distintas: modelo 4 16 / manual 3 25
+         |      ⚑ REQ-STM-002: quote_failed:quote no encontrada en RM0008-C0090 (ratio 0.77)
+         |      ⚑ REQ-STM-002: demoted:Compliant->Unconfirmed
+  [OK ] s7_inject            cirugía sobre el ReqIF original        (  0.2s)
+         | s7: 9 status + 18 campos XHTML inyectados en 9 SPEC-OBJECTs
+         | s7: roundtrip_diff OK → C:\Users\Daniel Martin\Desktop\Repositorios\marca personal\github\ctsm\data\outputs\reqif\STM32F10xxx_Validation.reqif
+
+== resumen (271.6s) ==
+  ✓ 1 documento(s) completaron los 6 pasos (modo veredicto).
+exit 0
+wall_s 272

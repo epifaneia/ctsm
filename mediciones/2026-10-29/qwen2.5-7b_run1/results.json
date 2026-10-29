@@ -1,0 +1,197 @@
+{
+  "stk": "STM32F10xxx_Validation",
+  "generated_by": "s6_verify (sellado)",
+  "status_enum_values": {
+    "Compliant": "ctsm-80029695-6cbc-5d62-9bc0-11a9720c84c6",
+    "Not compliant": "ctsm-6b7f3a2a-258a-5a67-8a68-529458678ef4",
+    "Unconfirmed": "ctsm-ac75abae-c210-5a8c-bdf7-b77ef2a67ee7"
+  },
+  "results": [
+    {
+      "spec_object_id": "REQ-STM-001",
+      "oem_req_id": null,
+      "status": "Not compliant",
+      "rationale": "The documentation specifies that the HSE can be driven by an external crystal/ceramic resonator with a frequency range of 3 to 25 MHz, which contradicts the requirement for a precisely tuned 12.000 MHz quartz crystal oscillator.\n\nEvidence:\n[RM0008 p.95 §7.2.1 HSE clock] \"The 4 to 16 MHz external oscillator has the advantage of producing a very accurate rate on the main clock.\"",
+      "comments": "Deviation request: The HSE must support a precisely tuned 12.000 MHz quartz crystal oscillator as per the requirement.",
+      "evidence": [
+        {
+          "chunk_id": "RM0008-C0144",
+          "doc": "RM0008",
+          "section": "§7.2.1 HSE clock",
+          "page": 95,
+          "quote": "The 4 to 16 MHz external oscillator has the advantage of producing a very accurate rate on the main clock.",
+          "match_ratio": 1.0,
+          "literal": true
+        }
+      ],
+      "flags": [
+        "quote_failed:paráfrasis que cambia el sentido en RM0008-C0197 (0.96): cifras distintas: modelo 4 16 / manual 3 25"
+      ]
+    },
+    {
+      "spec_object_id": "REQ-STM-002",
+      "oem_req_id": null,
+      "status": "Compliant",
+      "rationale": "The documentation explicitly states that the CRC calculation unit can compute a signature of the software during runtime using a 32-bit data word, which matches the requirement. Specifically, [RM0008-C0090] mentions 'The CRC calculation unit helps compute a signature of the software during runtime, to be compared with a reference signature generated at link-time and stored at a given memory location.'\n\nEvidence:\n[RM0008 p.63 §4.1 CRC introduction] \"The CRC calculation unit helps compute a signature of the software during runtime, to be compared with a reference signature generated at linktime and stored at a given memory location.\"",
+      "comments": "Compliant confirmation.",
+      "evidence": [
+        {
+          "chunk_id": "RM0008-C0090",
+          "doc": "RM0008",
+          "section": "§4.1 CRC introduction",
+          "page": 63,
+          "quote": "The CRC calculation unit helps compute a signature of the software during runtime, to be compared with a reference signature generated at linktime and stored at a given memory location.",
+          "match_ratio": 0.989,
+          "literal": false,
+          "quote_modelo": "The CRC calculation unit helps compute a signature of the software during runtime, to be compared with a reference signature generated at link-time and stored at a given memory location."
+        }
+      ],
+      "flags": [
+        "cita_aproximada:RM0008-C0090 (0.99): se muestra el texto del manual",
+        "solo_citas_aproximadas: revisar antes de firmar"
+      ]
+    },
+    {
+      "spec_object_id": "REQ-STM-003",
+      "oem_req_id": null,
+      "status": "Not compliant",
+      "rationale": "The documentation explicitly states that the backup registers provide 84 bytes of data storage, which is less than the required 256 bytes.\n\nEvidence:\n[RM0008 p.81 §6.1 BKP introduction] \"The backup registers are forty two 16-bit registers for storing 84 bytes of user application data.\"",
+      "comments": "Deviation request: The product provides only 84 bytes of backup registers, which is below the required 256 bytes.",
+      "evidence": [
+        {
+          "chunk_id": "RM0008-C0123",
+          "doc": "RM0008",
+          "section": "§6.1 BKP introduction",
+          "page": 81,
+          "quote": "The backup registers are forty two 16-bit registers for storing 84 bytes of user application data.",
+          "match_ratio": 1.0,
+          "literal": true
+        }
+      ],
+      "flags": []
+    },
+    {
+      "spec_object_id": "REQ-STM-004",
+      "oem_req_id": null,
+      "status": "Compliant",
+      "rationale": "The documentation explicitly states that the device requires a VDD supply ranging from 2.0 V to 3.6 V, which matches the requirement.\n\nEvidence:\n[RM0008 p.67 §5.1 Power supplies] \"The device requires a 2.0-to-3.6 V operating voltage supply (VDD).\"",
+      "comments": "Compliant with the requirement.",
+      "evidence": [
+        {
+          "chunk_id": "RM0008-C0100",
+          "doc": "RM0008",
+          "section": "§5.1 Power supplies",
+          "page": 67,
+          "quote": "The device requires a 2.0-to-3.6 V operating voltage supply (VDD).",
+          "match_ratio": 1.0,
+          "literal": true
+        }
+      ],
+      "flags": []
+    },
+    {
+      "spec_object_id": "REQ-STM-005",
+      "oem_req_id": null,
+      "status": "Unconfirmed",
+      "rationale": "The provided documentation does not explicitly state any maximum interrupt response and processing time for incoming CAN messages. The sections discuss mailbox management, FIFO handling, and filtering mechanisms but do not provide specific timing guarantees relevant to the requirement.\n\nEvidence:\n[RM0008 p.664 §24.7.3 Reception handling] \"If the FIFO lock function is disabled (RFLM bit in the CAN_MCR register cleared) the last message stored in the FIFO will be overwritten by the new incoming message. In this case the latest messages will be always available to the application.\"\n[RM0008 p.655 §24.3.4 Acceptance filters] \"Two receive FIFOs are used by hardware to store the incoming messages. Three complete messages can be stored in each FIFO. The FIFOs are managed completely by hardware.\"",
+      "comments": "The documentation discusses mailbox and FIFO management but does not provide specific timing guarantees for interrupt response and processing of CAN messages.",
+      "evidence": [
+        {
+          "chunk_id": "RM0008-C1079",
+          "doc": "RM0008",
+          "section": "§24.7.3 Reception handling",
+          "page": 664,
+          "quote": "If the FIFO lock function is disabled (RFLM bit in the CAN_MCR register cleared) the last message stored in the FIFO will be overwritten by the new incoming message. In this case the latest messages will be always available to the application.",
+          "match_ratio": 1.0,
+          "literal": true
+        },
+        {
+          "chunk_id": "RM0008-C1065",
+          "doc": "RM0008",
+          "section": "§24.3.4 Acceptance filters",
+          "page": 655,
+          "quote": "Two receive FIFOs are used by hardware to store the incoming messages. Three complete messages can be stored in each FIFO. The FIFOs are managed completely by hardware.",
+          "match_ratio": 1.0,
+          "literal": true
+        }
+      ],
+      "flags": []
+    },
+    {
+      "spec_object_id": "REQ-STM-006",
+      "oem_req_id": null,
+      "status": "Not compliant",
+      "rationale": "The documentation explicitly states that the OTG_FS controller only supports full-speed (12 Mbit/s) transfers in device mode, which contradicts the requirement for high-speed (480 Mbit/s) data transfers.\n\nEvidence:\n[RM0008 p.828 §28.1 OTG_FS introduction] \"in device mode, it only supports full-speed (FS, 12 Mbits/s) transfers.\"",
+      "comments": "The OTG_FS controller does not support high-speed data transfers in device mode as required by the specification. Please confirm if there is a specific high-speed capable variant of this controller available.",
+      "evidence": [
+        {
+          "chunk_id": "RM0008-C1297",
+          "doc": "RM0008",
+          "section": "§28.1 OTG_FS introduction",
+          "page": 828,
+          "quote": "in device mode, it only supports full-speed (FS, 12 Mbits/s) transfers.",
+          "match_ratio": 1.0,
+          "literal": true
+        }
+      ],
+      "flags": []
+    },
+    {
+      "spec_object_id": "REQ-STM-007",
+      "oem_req_id": null,
+      "status": "Compliant",
+      "rationale": "The documentation explicitly states that the MAC supports both 10 Mbit/s and 100 Mbit/s operating rates, which directly complies with the requirement.\n\nEvidence:\n[RM0008 p.979 §29.5 Ethernet functional description: MAC 802.3] \"The MAC block implements the LAN CSMA/CD sublayer for the following families of systems: 10 Mbit/s and 100 Mbit/s of data rates for baseband and broadband systems.\"",
+      "comments": "Compliant with the requirement as documented.",
+      "evidence": [
+        {
+          "chunk_id": "RM0008-C1490",
+          "doc": "RM0008",
+          "section": "§29.5 Ethernet functional description: MAC 802.3",
+          "page": 979,
+          "quote": "The MAC block implements the LAN CSMA/CD sublayer for the following families of systems: 10 Mbit/s and 100 Mbit/s of data rates for baseband and broadband systems.",
+          "match_ratio": 1.0,
+          "literal": true
+        }
+      ],
+      "flags": []
+    },
+    {
+      "spec_object_id": "REQ-STM-008",
+      "oem_req_id": null,
+      "status": "Unconfirmed",
+      "rationale": "The documentation does not explicitly state that the backup domain (VBAT) shall be powered exclusively by a primary Lithium-ion coin cell battery. The sections discuss VBAT powering the RTC and other functions when VDD is off, but do not specify the type of battery required.\n\nEvidence:\n[RM0008 p.69 §5.1.2 Battery backup domain] \"To retain the content of the Backup registers and supply the RTC function when VDD is turned off, VBAT pin can be connected to an optional standby voltage supplied by a battery or by another source.\"",
+      "comments": "Clarification needed on the type of battery required for powering the backup domain exclusively.",
+      "evidence": [
+        {
+          "chunk_id": "RM0008-C0103",
+          "doc": "RM0008",
+          "section": "§5.1.2 Battery backup domain",
+          "page": 69,
+          "quote": "To retain the content of the Backup registers and supply the RTC function when VDD is turned off, VBAT pin can be connected to an optional standby voltage supplied by a battery or by another source.",
+          "match_ratio": 1.0,
+          "literal": true
+        }
+      ],
+      "flags": []
+    },
+    {
+      "spec_object_id": "REQ-STM-009",
+      "oem_req_id": null,
+      "status": "Not compliant",
+      "rationale": "The documentation explicitly states that the I2S audio protocol is not available in low- and medium-density devices. Specifically, [RM0008-C1161] states: 'The I2S audio protocol is not available in low- and medium-density devices.' This contradicts the requirement that it should be supported across all low-density and medium-density devices.\n\nEvidence:\n[RM0008 p.723 §25.4 I2S functional description] \"The I2S audio protocol is not available in low- and medium-density devices.\"",
+      "comments": "Not compliant. The I2S protocol is explicitly stated to be unavailable on low- and medium-density devices.",
+      "evidence": [
+        {
+          "chunk_id": "RM0008-C1161",
+          "doc": "RM0008",
+          "section": "§25.4 I2S functional description",
+          "page": 723,
+          "quote": "The I2S audio protocol is not available in low- and medium-density devices.",
+          "match_ratio": 1.0,
+          "literal": true
+        }
+      ],
+      "flags": []
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+requisito            esperado  STM32F10xxx_Validation    
+---------------------------------------------------------
+REQ-STM-001          open      Not compliant FALLO         ⚑quote_failed:paráfrasis que cambia el sentido en RM0008-C0197 (0.96): 
+REQ-STM-002          yes       Compliant OK                ⚑cita_aproximada:RM0008-C0090 (0.99): se muestra el texto del manual;so
+REQ-STM-003          no        Not compliant OK          
+REQ-STM-004          yes       Compliant OK              
+REQ-STM-005          open      Unconfirmed OK            
+REQ-STM-006          no        Not compliant OK          
+REQ-STM-007          yes       Compliant OK              
+REQ-STM-008          open      Unconfirmed OK            
+REQ-STM-009          no        Not compliant OK          
+---------------------------------------------------------
+aciertos: 8/9
+falsos 'Compliant': NINGUNO

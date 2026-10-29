@@ -1,0 +1,147 @@
+[
+  {
+    "status": "Unconfirmed",
+    "analysis": "The documentation specifies that the HSE crystal can operate at frequencies between 4-16 MHz or 3-25 MHz, but it does not explicitly mention a precisely tuned 12.000 MHz quartz crystal oscillator.",
+    "evidence": [
+      {
+        "chunk_id": "RM0008-C0197",
+        "quote": "The 4 to 16 MHz external oscillator has the advantage of producing a very accurate rate on the main clock."
+      },
+      {
+        "chunk_id": "RM0008-C0210",
+        "quote": "external 3-25 MHz oscillator not bypassed"
+      }
+    ],
+    "comments": "The requirement specifies a precise frequency of 12.000 MHz, but the documentation only mentions ranges for HSE crystal operation (4-16 MHz or 3-25 MHz). Clarification is needed to determine if this specific frequency is supported.",
+    "spec_object_id": "REQ-STM-001",
+    "oem_req_id": null
+  },
+  {
+    "status": "Compliant",
+    "analysis": "The documentation explicitly states that the CRC calculation unit computes a CRC code from a 32-bit data word, which aligns with the requirement for computing a software signature during runtime using a 32-bit data word.",
+    "evidence": [
+      {
+        "chunk_id": "RM0008-C0090",
+        "quote": "The CRC calculation unit is used to get a CRC code from a 32-bit data word and a fixed generator polynomial."
+      },
+      {
+        "chunk_id": "RM0008-C0092",
+        "quote": "Each write operation into the data register creates a combination of the previous CRC value and the new one (CRC computation is done on the whole 32-bit data word, and not byte per byte)."
+      },
+      {
+        "chunk_id": "RM0008-C0093",
+        "quote": "The CRC calculation unit contains two data registers and a control register. The peripheral The CRC registers have to be accessed by words (32 bits)."
+      }
+    ],
+    "comments": "The system includes a CRC calculation unit that computes a software signature during runtime using a 32-bit data word, as required.",
+    "spec_object_id": "REQ-STM-002",
+    "oem_req_id": null
+  },
+  {
+    "status": "Not compliant",
+    "analysis": "The documentation specifies that the backup registers provide only 84 bytes of storage for user application data in high-density, XL-density and connectivity line devices, which is less than the required 256 bytes.",
+    "evidence": [
+      {
+        "chunk_id": "RM0008-C0123",
+        "quote": "The backup registers are forty two 16-bit registers for storing 84 bytes of user application data."
+      },
+      {
+        "chunk_id": "RM0008-C0124",
+        "quote": "20-byte data registers (in medium-density and low-density devices) or 84-byte data registers (in high-density, XL-density and connectivity line devices)"
+      }
+    ],
+    "comments": "The product does not provide the required 256 bytes of backup registers for storing user application data. The documented limit is 84 bytes.",
+    "spec_object_id": "REQ-STM-003",
+    "oem_req_id": null
+  },
+  {
+    "status": "Compliant",
+    "analysis": "The documentation explicitly states that the device requires a 2.0-to-3.6 V operating voltage supply (VDD), which matches the requirement.",
+    "evidence": [
+      {
+        "chunk_id": "RM0008-C0100",
+        "quote": "The device requires a 2.0-to-3.6 V operating voltage supply (VDD)."
+      }
+    ],
+    "comments": "The microcontroller complies with the requirement for a primary voltage supply ranging from 2.0 V to 3.6 V.",
+    "spec_object_id": "REQ-STM-004",
+    "oem_req_id": null
+  },
+  {
+    "status": "Unconfirmed",
+    "analysis": "The documentation does not provide specific information about the maximum interrupt response and processing time for incoming CAN messages, which is required by REQ-STM-005.",
+    "evidence": [
+      {
+        "chunk_id": "RM0008-C1079",
+        "quote": "Once a message has been stored in the FIFO, the FMP[1:0] bits are updated and an interrupt request is generated if the FMPIE bit in the CAN_IER register is set."
+      },
+      {
+        "chunk_id": "RM0008-C1065",
+        "quote": "Two receive FIFOs are used by hardware to store the incoming messages. Three complete messages can be stored in each FIFO."
+      }
+    ],
+    "comments": "The documentation does not specify a maximum interrupt response and processing time for CAN messages, which is an application-level decision or requires additional information not provided here.",
+    "spec_object_id": "REQ-STM-005",
+    "oem_req_id": null
+  },
+  {
+    "status": "Not compliant",
+    "analysis": "The documentation explicitly states that the OTG_FS controller only supports full-speed (FS) transfers at 12 Mbits/s in device mode, which contradicts the requirement for High-Speed (HS) data transfers at 480 Mbit/s.",
+    "evidence": [
+      {
+        "chunk_id": "RM0008-C1297",
+        "quote": "in device mode, it only supports full-speed (FS, 12 Mbits/s) transfers."
+      }
+    ],
+    "comments": "The product does not support High-Speed data transfers in OTG device mode as required by REQ-STM-006. The documentation clearly states that the OTG_FS controller is limited to full-speed only in this configuration.",
+    "spec_object_id": "REQ-STM-006",
+    "oem_req_id": null
+  },
+  {
+    "status": "Compliant",
+    "analysis": "The documentation explicitly states that the Ethernet MAC supports both 10 Mbit/s and 100 Mbit/s operating rates, as required by REQ-STM-007.",
+    "evidence": [
+      {
+        "chunk_id": "RM0008-C1490",
+        "quote": "The IEEE 802.3 International Standard for local area networks (LANs) employs the CSMA/CD (carrier sense multiple access with collision detection) as the access method. The Ethernet peripheral consists of a MAC 802.3 (media access control) controller with media independent interface (MII) and a dedicated DMA controller. The MAC block implements the LAN CSMA/CD sublayer for the following families of systems: 10 Mbit/s and 100 Mbit/s of data rates for baseband and broadband systems."
+      },
+      {
+        "chunk_id": "RM0008-C1487",
+        "quote": "It supports 10-Mbit/s and 100-Mbit-s operating rates"
+      }
+    ],
+    "comments": "The requirement is fully supported by the provided documentation.",
+    "spec_object_id": "REQ-STM-007",
+    "oem_req_id": null
+  },
+  {
+    "status": "Unconfirmed",
+    "analysis": "The documentation indicates that the backup domain can be powered by VBAT, but it does not explicitly state that VBAT is exclusively powered by a primary Lithium-ion coin cell battery. The requirement specifies an exclusive power source for the backup domain (VBAT), which is not confirmed or denied in the provided excerpts.",
+    "evidence": [
+      {
+        "chunk_id": "RM0008-C0103",
+        "quote": "To retain the content of the Backup registers and supply the RTC function when VDD is turned off, VBAT pin can be connected to an optional standby voltage supplied by a battery or by another source."
+      },
+      {
+        "chunk_id": "RM0008-C0123",
+        "quote": "The backup registers are forty two 16-bit registers for storing 84 bytes of user application data. They are implemented in the backup domain that remains powered on by VBAT when the VDD power is switched off."
+      }
+    ],
+    "comments": "Please clarify if the backup domain (VBAT) can only be powered exclusively by a primary Lithium-ion coin cell battery, or if other sources are allowed as well.",
+    "spec_object_id": "REQ-STM-008",
+    "oem_req_id": null
+  },
+  {
+    "status": "Not compliant",
+    "analysis": "The documentation explicitly states that the I2S audio protocol is not available in low- and medium-density devices. This directly contradicts the requirement which mandates support across all such devices.",
+    "evidence": [
+      {
+        "chunk_id": "RM0008-C1161",
+        "quote": "The I2S audio protocol is not available in low- and medium-density devices."
+      }
+    ],
+    "comments": "Deviation request: The requirement REQ-STM-009 cannot be met as the I2S audio protocol is explicitly stated to be unavailable on low- and medium-density devices according to RM0008 §25.4.",
+    "spec_object_id": "REQ-STM-009",
+    "oem_req_id": null
+  }
+]

@@ -51,15 +51,15 @@ Set: 9 requirements written against the STM32F10xxx reference manual RM0008 (1,1
 
 | Engine | Hits vs ground truth | False "compliant" | Seconds / requirement |
 |---|---|---|---|
-| **qwen2.5:14b, local** | **9 / 9** | **0** | 119 (Ollama autofit) |
-| qwen2.5:7b, local | 8 / 9 (7 / 9 in a second run) | 0 | 26 |
+| **qwen2.5:14b, local** | **9 / 9** | **0** | 150 (Ollama autofit) |
+| qwen2.5:7b, local | 8 / 9 (7 / 9 in a second run) | 0 | 25–29 |
 | gemini (cloud) | not re-measured yet | | |
 
-Measured on 2026-10-27, n = 9: a small set, read it as a smoke test, not a benchmark. Runs are not identical: the 7B changed one verdict between two passes, always between *Not compliant* and *Unconfirmed*. An earlier version of this table used requirement ids that hinted the expected answer (`REQ-STM-ACC-001`, `-REJ-`, `-OPN-`), and the id reaches the prompt. The ids are now neutral and shuffled, and both local models were re-measured; both scored higher than before. The cloud row has not been re-run.
+Measured on 2026-10-27 and re-run on 2026-10-29 with every output saved: log, raw verdicts, sealed results and score for each run are in [`mediciones/2026-10-29/`](mediciones/2026-10-29/). The re-run gave the same hits; the seconds are from it. n = 9: a small set, read it as a smoke test, not a benchmark. Runs are not identical: in its second pass the 7B lost REQ-STM-002, a *Compliant* that `s6` demoted to *Unconfirmed* because its quote was not in the passage it cited. An earlier version of this table used requirement ids that hinted the expected answer (`REQ-STM-ACC-001`, `-REJ-`, `-OPN-`), and the id reaches the prompt. The ids are now neutral and shuffled, and both local models were re-measured; both scored higher than before. The cloud row has not been re-run.
 
 Two things follow from that table. The local model removes the data leaving the machine, and the bounded task is what makes a 14B enough. What a model misses, the guardrail flags instead of letting through: the 7B miss is a *Not compliant* where the expected answer was *Unconfirmed*, flagged by `s6` because one of its two quotes did not verify; neither model produced a false *Compliant*.
 
-What the literal check catches, on this very run. For REQ-STM-001 the 14B quoted *"The **4 to 16 MHz** external oscillator has the advantage of producing a very accurate rate on the main clock"*; the passage it pointed to says ***3 to 25 MHz***. A similarity threshold alone accepts it (0.96). `s6` sees that the figures differ, discards that quote as evidence and records why: `cifras distintas: modelo 4 16 / manual 3 25`. Of the 14 quotes in the run, 11 are literal, 2 are paraphrases that keep every figure (shown with the manual's text) and 1 is this one, discarded. The verdicts do not change: 9/9.
+What the literal check catches, on this very run. For REQ-STM-001 the 14B quoted *"The **4 to 16 MHz** external oscillator has the advantage of producing a very accurate rate on the main clock"*; the passage it pointed to says ***3 to 25 MHz***. A similarity threshold alone accepts it (0.96). `s6` sees that the figures differ, discards that quote as evidence and records why: `cifras distintas: modelo 4 16 / manual 3 25`. Of the 16 quotes in the run, 12 are literal, 3 are paraphrases that keep every figure (shown with the manual's text) and 1 is this one, discarded. The verdicts do not change: 9/9.
 
 `tools/score_vs_fixture.py` reproduces the table. Calibrate Ollama threads with the **longest** prompt of the set, not the shortest: a short prompt makes a setting look faster than it is on real requirements.
 

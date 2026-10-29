@@ -51,15 +51,15 @@ Set: 9 requisitos escritos contra el manual de referencia STM32F10xxx RM0008 (1.
 
 | Motor | Aciertos vs ground truth | Falsos "cumple" | Segundos / requisito |
 |---|---|---|---|
-| **qwen2.5:14b, local** | **9 / 9** | **0** | 119 (autofit de Ollama) |
-| qwen2.5:7b, local | 8 / 9 (7 / 9 en una segunda pasada) | 0 | 26 |
+| **qwen2.5:14b, local** | **9 / 9** | **0** | 150 (autofit de Ollama) |
+| qwen2.5:7b, local | 8 / 9 (7 / 9 en una segunda pasada) | 0 | 25–29 |
 | gemini (nube) | sin volver a medir | | |
 
-Medido el 27-10-2026, n = 9: un set pequeño, léelo como prueba de humo, no como benchmark. Las pasadas no son idénticas: el 7B cambió un veredicto entre dos pasadas, siempre entre *Not compliant* y *Unconfirmed*. Una versión anterior de esta tabla usaba identificadores que insinuaban la respuesta esperada (`REQ-STM-ACC-001`, `-REJ-`, `-OPN-`), y el identificador llega al prompt. Ahora son neutros y van mezclados, y los dos modelos locales se han vuelto a medir; los dos han salido mejor que antes. La fila de nube no se ha vuelto a correr.
+Medido el 27-10-2026 y repetido el 29-10-2026 guardando cada salida: el log, los veredictos en bruto, los resultados sellados y la puntuación de cada pasada están en [`mediciones/2026-10-29/`](mediciones/2026-10-29/). La repetición dio los mismos aciertos; los segundos salen de ella. n = 9: un set pequeño, léelo como prueba de humo, no como benchmark. Las pasadas no son idénticas: en su segunda pasada el 7B perdió REQ-STM-002, un *Compliant* que `s6` degradó a *Unconfirmed* porque su cita no estaba en el pasaje que señalaba. Una versión anterior de esta tabla usaba identificadores que insinuaban la respuesta esperada (`REQ-STM-ACC-001`, `-REJ-`, `-OPN-`), y el identificador llega al prompt. Ahora son neutros y van mezclados, y los dos modelos locales se han vuelto a medir; los dos han salido mejor que antes. La fila de nube no se ha vuelto a correr.
 
 De esa tabla salen dos cosas. El modelo local elimina la salida del dato, y la tarea acotada es lo que hace que un 14B baste. Lo que un modelo falla, el guardarraíl lo marca en vez de colarlo: el fallo del 7B es un *Not compliant* donde se esperaba *Unconfirmed*, marcado por `s6` porque una de sus dos citas no verificó; ningún modelo dio un falso *Compliant*.
 
-Lo que caza la comprobación literal, en esta misma ejecución. En REQ-STM-001 el 14B citó *"The **4 to 16 MHz** external oscillator has the advantage of producing a very accurate rate on the main clock"*; el pasaje que señaló dice ***3 to 25 MHz***. Un umbral de similitud solo lo da por bueno (0,96). `s6` ve que las cifras no coinciden, descarta esa cita como evidencia y deja anotado por qué: `cifras distintas: modelo 4 16 / manual 3 25`. De las 14 citas de la ejecución, 11 son literales, 2 son paráfrasis que conservan todas las cifras (mostradas con el texto del manual) y 1 es esta, descartada. Los veredictos no cambian: 9/9.
+Lo que caza la comprobación literal, en esta misma ejecución. En REQ-STM-001 el 14B citó *"The **4 to 16 MHz** external oscillator has the advantage of producing a very accurate rate on the main clock"*; el pasaje que señaló dice ***3 to 25 MHz***. Un umbral de similitud solo lo da por bueno (0,96). `s6` ve que las cifras no coinciden, descarta esa cita como evidencia y deja anotado por qué: `cifras distintas: modelo 4 16 / manual 3 25`. De las 16 citas de la ejecución, 12 son literales, 3 son paráfrasis que conservan todas las cifras (mostradas con el texto del manual) y 1 es esta, descartada. Los veredictos no cambian: 9/9.
 
 `tools/score_vs_fixture.py` reproduce la tabla. Calibra los hilos de Ollama con el prompt **más largo** del set, no con el más corto: con un prompt corto un ajuste parece más rápido de lo que es con requisitos reales.
 
