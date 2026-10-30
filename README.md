@@ -89,19 +89,15 @@ Beyond the public set, the pipeline has been run on a real customer specificatio
 
 ## Polarion
 
-Public data in a Polarion trial: the nine STM32 requirements against RM0008. Nothing to redact.
+Public data in a Polarion trial: the nine STM32 requirements against RM0008. Nothing to redact. Both screenshots are from the first import, on 2026-09-24, before the requirement ids were made neutral: they still show the old ids that hinted the expected answer (`REQ-STM-ACC-001`, `-REJ-`, `-OPN-`), the ones the [Measured](#measured) note explains. The status labels, *Alligned* included, are the Polarion project's own.
 
 *The demo document after import: one heading, nine requirements, each with its verbatim identifier as title.*
 
 ![STM32 validation document in Polarion](docs/img/polarion-02-tree.png)
 
-*The same requirement after the pipeline wrote back into the file: the status enum set, the rationale with the citation, and the page and section derived by code from the supplier manual.*
+*A requirement after the pipeline wrote back into the file: the status enum set, the rationale with the citation, and the page and section derived by code from the supplier manual.*
 
 ![Requirement with status and rationale filled by CTSM](docs/img/polarion-04-status-rationale.png)
-
-*The ReqIF import mapping in Polarion: the pipeline's fields map onto the project's own fields; nothing is created on the Polarion side.*
-
-![ReqIF import mapping](docs/img/polarion-01-import.png)
 
 ## The full pipeline on public data
 

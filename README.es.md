@@ -89,19 +89,15 @@ Además del set público, el pipeline se ha corrido sobre una especificación re
 
 ## Polarion
 
-Datos públicos en un Polarion de prueba: los nueve requisitos de STM32 contra el RM0008. Nada que tachar.
+Datos públicos en un Polarion de prueba: los nueve requisitos de STM32 contra el RM0008. Nada que tachar. Las dos capturas son del primer import, del 2026-09-24, antes de neutralizar los identificadores: todavía enseñan los antiguos, que insinuaban la respuesta esperada (`REQ-STM-ACC-001`, `-REJ-`, `-OPN-`), los que explica la nota de [Medido](#medido). Las etiquetas de estado, *Alligned* incluida, son las del propio proyecto de Polarion.
 
 *El documento de demo tras el import: una cabecera, nueve requisitos, cada uno con su identificador verbatim como título.*
 
 ![Documento de validación STM32 en Polarion](docs/img/polarion-02-tree.png)
 
-*El mismo requisito después de que el pipeline escribiera en el fichero: el enum de estado puesto, el rationale con la cita, y la página y la sección derivadas por código del manual del proveedor.*
+*Un requisito después de que el pipeline escribiera en el fichero: el enum de estado puesto, el rationale con la cita, y la página y la sección derivadas por código del manual del proveedor.*
 
 ![Requisito con estado y rationale rellenados por CTSM](docs/img/polarion-04-status-rationale.png)
-
-*El mapeo de importación ReqIF en Polarion: los campos del pipeline se mapean a los del proyecto; en el lado de Polarion no se crea nada.*
-
-![Mapeo de importación ReqIF](docs/img/polarion-01-import.png)
 
 ## El pipeline completo sobre datos públicos
 
