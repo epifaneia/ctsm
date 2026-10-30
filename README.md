@@ -6,7 +6,29 @@ Audits the requirements of a customer specification (a ReqIF exported from Polar
 
 > AI carries risk. Code bounds it. The standard answers for what remains.
 
-[Design philosophy](#design-philosophy) · [Why AI here](#why-ai-here) · [The five steps](#the-five-steps-in-this-project) · [Measured](#measured) · [Demo](#see-it-in-30-seconds-the-interface-in-demo-mode) · [Limitations](#limitations) · [Security & regulation](#security--regulation)
+[Try it](#try-it) · [Design philosophy](#design-philosophy) · [Why AI here](#why-ai-here) · [The five steps](#the-five-steps-in-this-project) · [Measured](#measured) · [Limitations](#limitations) · [Security & regulation](#security--regulation)
+
+---
+
+## Try it
+
+### Replay a recorded run: no model, no GPU, under a minute to install
+
+```bash
+pip install -r requirements.txt
+python ui/app.py --demo                           # → http://127.0.0.1:8078
+```
+
+This is the program's own interface playing back a real run instead of computing one: qwen2.5:14b auditing the nine requirements against the 1,136-page RM0008 manual on an RTX 2060, recorded on 2026-10-27 (`ui/demo/stm32/`) and replayed at ×12. The screen says so. Verdicts and quotes are copied from that run's log by `ui/grabar_demo.py`, never edited.
+
+- **What you can do:** watch the five steps run, open every requirement with its verdict, its verified quote and its page, see the custody ledger (model calls, who ran them, bytes that left the machine: zero) and the quote the code rejected (4–16 MHz against 3–25). If RM0008 is in `data/inputs/supplier_docs/`, each quote is shown highlighted on its page of the manual.
+- **What you cannot do:** upload your own ReqIF or PDFs, change the model, or download an output ReqIF. Nothing is computed, so it needs no GPU, no model and no network.
+
+Why a replay: a live run needs Ollama with a 9 GB model and takes about 20 minutes on a 6 GB GPU (150 s per requirement). The replay lets anyone see the whole flow in a couple of minutes, without pretending the computation is happening.
+
+### The full program
+
+`python ui/app.py`, without `--demo`, is the whole program (it needs Ollama with `qwen2.5:7b` or `qwen2.5:14b`, and `CUSTODIA_ACTOR`, like `run.py`). It takes your ReqIF and the supplier PDFs, runs the same pipeline in a sandbox per job, shows each verdict as `s4` writes it, and gives you the output ReqIF and the three `roundtrip_diff` locks. The command-line version is in [The full pipeline on public data](#the-full-pipeline-on-public-data).
 
 ---
 
@@ -80,17 +102,6 @@ Public data in a Polarion trial: the nine STM32 requirements against RM0008. Not
 *The ReqIF import mapping in Polarion: the pipeline's fields map onto the project's own fields; nothing is created on the Polarion side.*
 
 ![ReqIF import mapping](docs/img/polarion-01-import.png)
-
-## See it in 30 seconds: the interface in demo mode
-
-```bash
-pip install -r requirements.txt
-python ui/app.py --demo                           # → http://127.0.0.1:8078
-```
-
-The demo replays a real recorded run (`ui/demo/stm32/`: qwen2.5:14b on the RTX 2060 above) at ×12, and says so on screen. No model, no network, no data to download. If RM0008 is in `data/inputs/supplier_docs/`, each quote is shown highlighted on its page of the manual. The recording is made by `ui/grabar_demo.py` from a `run.py` log; verdicts and quotes are copied, never edited.
-
-Live mode, `python ui/app.py` (needs `CUSTODIA_ACTOR`, like `run.py`), takes a ReqIF and the supplier PDFs, runs the same pipeline in a sandbox per job, shows each verdict as `s4` writes it, and offers the output ReqIF and the three `roundtrip_diff` locks.
 
 ## The full pipeline on public data
 

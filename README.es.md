@@ -6,7 +6,29 @@ Audita los requisitos de una especificación de cliente (un ReqIF exportado de P
 
 > La IA tiene riesgos. El código los acota. La norma responde de lo que queda.
 
-[Filosofía de diseño](#filosofía-de-diseño) · [Dónde aporta valor la IA](#dónde-aporta-valor-la-ia) · [Los cinco pasos](#los-cinco-pasos-en-este-proyecto) · [Medido](#medido) · [Demo](#verlo-en-30-segundos-la-interfaz-en-modo-demo) · [Limitaciones](#limitaciones) · [Seguridad y regulación](#seguridad-y-regulación)
+[Probarlo](#probarlo) · [Filosofía de diseño](#filosofía-de-diseño) · [Dónde aporta valor la IA](#dónde-aporta-valor-la-ia) · [Los cinco pasos](#los-cinco-pasos-en-este-proyecto) · [Medido](#medido) · [Limitaciones](#limitaciones) · [Seguridad y regulación](#seguridad-y-regulación)
+
+---
+
+## Probarlo
+
+### Una ejecución grabada: sin modelo, sin GPU, menos de un minuto de instalación
+
+```bash
+pip install -r requirements.txt
+python ui/app.py --demo                           # → http://127.0.0.1:8078
+```
+
+Es la interfaz del propio programa reproduciendo una ejecución real en vez de calcularla: qwen2.5:14b auditando los nueve requisitos contra las 1.136 páginas del manual RM0008 en una RTX 2060, grabada el 2026-10-27 (`ui/demo/stm32/`) y reproducida a ×12. La pantalla lo dice. Veredictos y citas se copian del log de esa ejecución con `ui/grabar_demo.py`, sin editar.
+
+- **Qué puedes hacer:** ver correr los cinco pasos, abrir cada requisito con su veredicto, su cita verificada y su página, ver el libro de custodia (llamadas al modelo, quién las lanzó, datos que salieron de la máquina: cero) y la cita que el código rechazó (4–16 MHz frente a 3–25). Si RM0008 está en `data/inputs/supplier_docs/`, cada cita se ve resaltada en su página del manual.
+- **Qué no puedes hacer:** subir tu propio ReqIF o tus PDFs, cambiar de modelo ni descargar un ReqIF de salida. No se calcula nada, así que no hace falta GPU, ni modelo, ni red.
+
+Por qué una grabación: una ejecución en vivo necesita Ollama con un modelo de 9 GB y tarda unos 20 minutos en una GPU de 6 GB (150 s por requisito). La grabación deja ver el flujo entero en un par de minutos, sin fingir que se está calculando.
+
+### El programa completo
+
+`python ui/app.py`, sin `--demo`, es el programa entero (necesita Ollama con `qwen2.5:7b` o `qwen2.5:14b`, y `CUSTODIA_ACTOR`, como `run.py`). Recibe tu ReqIF y los PDFs del proveedor, ejecuta el mismo pipeline en un sandbox por trabajo, enseña cada veredicto según lo escribe `s4` y te da el ReqIF de salida y los tres candados de `roundtrip_diff`. La versión por línea de comandos está en [El pipeline completo sobre datos públicos](#el-pipeline-completo-sobre-datos-públicos).
 
 ---
 
@@ -80,17 +102,6 @@ Datos públicos en un Polarion de prueba: los nueve requisitos de STM32 contra e
 *El mapeo de importación ReqIF en Polarion: los campos del pipeline se mapean a los del proyecto; en el lado de Polarion no se crea nada.*
 
 ![Mapeo de importación ReqIF](docs/img/polarion-01-import.png)
-
-## Verlo en 30 segundos: la interfaz en modo demo
-
-```bash
-pip install -r requirements.txt
-python ui/app.py --demo                           # → http://127.0.0.1:8078
-```
-
-La demo reproduce una ejecución real grabada (`ui/demo/stm32/`: qwen2.5:14b en la RTX 2060 de arriba) a ×12, y lo dice en pantalla. Sin modelo, sin red, sin datos que descargar. Si el RM0008 está en `data/inputs/supplier_docs/`, cada cita se enseña resaltada en su página del manual. La grabación la hace `ui/grabar_demo.py` a partir de un log de `run.py`; veredictos y citas se copian, nunca se editan.
-
-El modo en vivo, `python ui/app.py` (pide `CUSTODIA_ACTOR`, como `run.py`), recibe un ReqIF y los PDFs del proveedor, corre el mismo pipeline en un sandbox por trabajo, enseña cada veredicto según lo escribe `s4` y ofrece el ReqIF de salida y los tres candados de `roundtrip_diff`.
 
 ## El pipeline completo sobre datos públicos
 
