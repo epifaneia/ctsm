@@ -97,15 +97,40 @@ def find_literal_span(quote: str, texto: str) -> tuple[int, int] | None:
 
     Literal estricto tras normalizar: no hay umbral que ajustar. O está, o no.
     `texto[inicio:fin]` es el texto del documento tal cual, con sus saltos de línea.
+
+    El tramo tiene que empezar y acabar en límite de palabra: «200 mA» no está
+    dentro de «1200 mA», ni «40 °C» dentro de «-40 °C», ni «3» dentro de «3,5».
     """
     q, _ = normalize(quote)
     t, mapa = normalize(texto)
     if not q:
         return None
     pos = t.find(q)
-    if pos < 0:
-        return None
-    return mapa[pos], mapa[pos + len(q) - 1] + 1
+    while pos >= 0:
+        if _en_limite(t, pos, pos + len(q)):
+            return mapa[pos], mapa[pos + len(q) - 1] + 1
+        pos = t.find(q, pos + 1)
+    return None
+
+
+def _en_limite(t: str, ini: int, fin: int) -> bool:
+    """El tramo t[ini:fin] no corta una palabra ni una cifra (con su signo o sus decimales)."""
+    antes = t[ini - 1] if ini > 0 else ""
+    despues = t[fin] if fin < len(t) else ""
+    if antes.isalnum() and t[ini].isalnum():
+        return False
+    if despues.isalnum() and t[fin - 1].isalnum():
+        return False
+    # un signo pegado a la cifra es parte de ella; un guion pegado a otra palabra o cifra es un
+    # rango o un compuesto («9-16 V», «2.0-to-3.6 V»)
+    previo = t[ini - 2] if ini > 1 else ""
+    if t[ini].isdigit() and antes and antes in "-−+" and not previo.isalnum():
+        return False
+    if t[ini].isdigit() and antes and antes in ".," and previo.isdigit():
+        return False
+    if t[fin - 1].isdigit() and despues in ".," and fin + 1 < len(t) and t[fin + 1].isdigit():
+        return False
+    return True
 
 
 def find_literal(quote: str, texto: str) -> int | None:

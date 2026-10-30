@@ -39,7 +39,7 @@ ok, _ = verificar("The real-time clock and backup registers can be powered from 
 check(ok and ok["literal"] and ok["page"] == 68, "la página sale del offset, no del chunk", ok and ok["page"])
 
 ok, why = verificar("The device requires a 2.0-to-5.5 V operating voltage supply (VDD).")
-check(ok is None and "cifras distintas" in why and "5 5" in why and "3 6" in why,
+check(ok is None and "cifras distintas" in why and "5.5" in why and "3.6" in why,
       "una cifra cambiada no cuenta como evidencia, y queda dicho cuál", why)
 
 ok, why = verificar("The device does not require a 2.0-to-3.6 V operating voltage supply (VDD).")
@@ -55,6 +55,25 @@ check(ok is None and "no encontrada" in why, "algo que no está en el manual se 
 
 ok, why = verificar("The device requires a 2.0-to-3.6 V operating voltage supply (VDD).", "RM0008-C9999")
 check(ok is None and "inexistente" in why, "un chunk que no existe se descarta", why)
+
+print("cortes y cifras (casos de la revisión del 30 oct)")
+T2 = ("6.2 Limits\nThe output must not be enabled while VDD is below 2.0 V. Operating range -40 °C to 85 °C. "
+      "Maximum current 1200 mA. Supply 9-16 V. Startup time 3.6 s. However, the clock shall restart after reset.")
+CHUNKS["RM0008-C0200"] = {"chunk_id": "RM0008-C0200", "doc": "RM0008", "section": "§6.2 Limits", "text": T2,
+                          "page_start": 90, "page_map": [{"offset": 0, "page": 90}]}
+for quote, debe_pasar, que in [
+    ("be enabled while VDD is below 2.0 V", False, "un trozo literal que deja fuera el «not» de delante no pasa"),
+    ("40 °C to 85 °C", False, "«40 °C» no está dentro de «-40 °C»"),
+    ("Maximum current 200 mA", False, "«200 mA» no está dentro de «1200 mA»"),
+    ("Minimum current 1200 mA.", False, "maximum cambiado por minimum no pasa"),
+    ("Startup time 6.3 s.", False, "3.6 s cambiado por 6.3 s no pasa"),
+    ("Startup time 3.6 ms.", False, "s cambiado por ms no pasa"),
+    ("Supply 16-9 V.", False, "el orden de las cifras cuenta"),
+    ("Supply 9-16 V.", True, "un rango con guion sigue siendo literal"),
+    ("the clock shall restart after reset.", True, "«However,» delante no es una negación de la frase"),
+]:
+    ok, why = _verify_evidence({"chunk_id": "RM0008-C0200", "quote": quote}, CHUNKS)
+    check((ok is not None) == debe_pasar, que, why)
 
 print("modo revision: un pasaje que contradiga manda")
 from pipeline.s6_verify import _sellar_revision  # noqa: E402
